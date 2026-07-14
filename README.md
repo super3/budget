@@ -27,6 +27,14 @@ npm run lint     # oxlint
 npm run preview  # serve the production build
 ```
 
+## Deployment
+
+Pushes to `main` deploy to GitHub Pages via `.github/workflows/deploy.yml`
+(it can also be run manually from the Actions tab). The workflow builds with
+`--base=/<repo>/` so assets resolve under the project-site URL. If the first
+run can't enable Pages automatically, set **Settings → Pages → Source** to
+**GitHub Actions** once.
+
 ## Project structure
 
 ```
