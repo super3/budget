@@ -1,0 +1,154 @@
+import { useState } from 'react'
+import type { Screen } from '../data'
+import { useMenu } from './menu'
+import { AccountsIcon, DashboardIcon, LogoDiamond, SidebarCollapseIcon, TransactionsIcon } from './icons'
+
+interface SidebarProps {
+  screen: Screen
+  onNavigate: (screen: Screen) => void
+}
+
+interface NavItemProps {
+  label: string
+  icon: React.ReactNode
+  active: boolean
+  expanded: boolean
+  onClick: () => void
+}
+
+function NavItem({ label, icon, active, expanded, onClick }: NavItemProps) {
+  return (
+    <div
+      className={`nav-item${active ? ' active' : ''}`}
+      style={{ justifyContent: expanded ? 'flex-start' : 'center', padding: expanded ? '8px 11px' : '8px 0' }}
+      onClick={onClick}
+    >
+      {icon}
+      <span style={{ display: expanded ? 'inline' : 'none' }}>{label}</span>
+    </div>
+  )
+}
+
+export function Sidebar({ screen, onNavigate }: SidebarProps) {
+  const [collapsed, setCollapsed] = useState(false)
+  const [hoverExpand, setHoverExpand] = useState(false)
+  const { openMenu, toggleMenu, setOpenMenu } = useMenu()
+
+  const expanded = !collapsed || hoverExpand
+  const overlay = collapsed && hoverExpand
+
+  return (
+    <div className="sidebar-slot" style={{ width: collapsed ? 68 : 248 }}>
+      <div
+        className={`sidebar${overlay ? ' overlay' : ''}`}
+        style={{ width: expanded ? 248 : 68 }}
+        onMouseEnter={() => {
+          if (collapsed) setHoverExpand(true)
+        }}
+        onMouseLeave={() => setHoverExpand(false)}
+      >
+        <div
+          className="sidebar-top"
+          style={{ flexDirection: expanded ? 'row' : 'column', padding: expanded ? '18px 14px 12px 16px' : '18px 0 12px 0' }}
+        >
+          <div
+            className="sidebar-logo"
+            style={{ cursor: collapsed ? 'pointer' : 'default' }}
+            onClick={() => {
+              if (collapsed) {
+                setCollapsed(false)
+                setHoverExpand(false)
+              }
+            }}
+          >
+            <div className="sidebar-logo-mark">
+              <LogoDiamond />
+            </div>
+            <span className="sidebar-logo-name" style={{ display: expanded ? 'inline' : 'none' }}>
+              Fern
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div
+              className="sidebar-collapse-btn"
+              style={{ display: expanded ? 'flex' : 'none' }}
+              onClick={() => {
+                setCollapsed(!collapsed)
+                setHoverExpand(false)
+              }}
+            >
+              <SidebarCollapseIcon />
+            </div>
+          </div>
+        </div>
+
+        <div className="sidebar-nav">
+          <NavItem
+            label="Dashboard"
+            icon={<DashboardIcon />}
+            active={screen === 'dashboard'}
+            expanded={expanded}
+            onClick={() => onNavigate('dashboard')}
+          />
+          <NavItem
+            label="Accounts"
+            icon={<AccountsIcon />}
+            active={screen === 'accounts' || screen === 'accountDetail'}
+            expanded={expanded}
+            onClick={() => onNavigate('accounts')}
+          />
+          <NavItem
+            label="Transactions"
+            icon={<TransactionsIcon />}
+            active={screen === 'transactions'}
+            expanded={expanded}
+            onClick={() => onNavigate('transactions')}
+          />
+        </div>
+
+        <div style={{ flex: 1 }} />
+
+        <div className="sidebar-bottom">
+          <div style={{ position: 'relative' }}>
+            <div
+              className="profile-row"
+              style={{ justifyContent: expanded ? 'flex-start' : 'center', padding: expanded ? '7px 11px' : '7px 0' }}
+              onClick={(e) => {
+                e.stopPropagation()
+                toggleMenu('profile')
+              }}
+            >
+              <div className="profile-avatar">AM</div>
+              <span className="profile-name" style={{ display: expanded ? 'inline' : 'none' }}>
+                Alex Morgan
+              </span>
+              <span className="profile-caret" style={{ display: expanded ? 'inline' : 'none' }}>
+                ▾
+              </span>
+            </div>
+            {openMenu === 'profile' && (
+              <div className="profile-menu" onClick={(e) => e.stopPropagation()}>
+                <div className="profile-menu-header">
+                  <div className="profile-menu-name">Alex Morgan</div>
+                  <div className="profile-menu-email">alex@fern.money</div>
+                </div>
+                <div
+                  className="menu-item"
+                  onClick={() => {
+                    onNavigate('settings')
+                    setOpenMenu(null)
+                  }}
+                >
+                  Settings
+                </div>
+                <div className="menu-item" onClick={() => setOpenMenu(null)}>
+                  Sign out
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
