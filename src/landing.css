@@ -92,8 +92,10 @@
 .join-btn {
   font-size: 16px;
   font-weight: 650;
+  font-family: inherit;
   color: #ffffff;
   padding: 13px 24px;
+  border: none;
   border-radius: 10px;
   background: var(--accent);
   cursor: pointer;
@@ -102,6 +104,22 @@
 
 .join-btn:hover {
   background: var(--accent-hover);
+}
+
+.join-btn:disabled,
+.join-btn-dark:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.wl-error {
+  margin-top: 10px;
+  font-size: 14px;
+  color: oklch(0.5 0.16 25);
+}
+
+.wl-error.dark {
+  color: oklch(0.87 0.06 25);
 }
 
 .joined-pill {
@@ -133,8 +151,10 @@
 .join-btn-dark {
   font-size: 16px;
   font-weight: 650;
+  font-family: inherit;
   color: oklch(0.32 0.06 170);
   padding: 13px 24px;
+  border: none;
   border-radius: 10px;
   background: #ffffff;
   cursor: pointer;

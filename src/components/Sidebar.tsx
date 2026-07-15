@@ -3,10 +3,19 @@ import type { Screen } from '../data'
 import { useMenu } from './menu'
 import { AccountsIcon, DashboardIcon, LogoDiamond, SidebarCollapseIcon, TransactionsIcon } from './icons'
 
+export interface SidebarUser {
+  name: string
+  email: string
+  initials: string
+}
+
+const DEMO_USER: SidebarUser = { name: 'Alex Morgan', email: 'alex@aldermoney.com', initials: 'AM' }
+
 interface SidebarProps {
   screen: Screen
   onNavigate: (screen: Screen) => void
   onSignOut: () => void
+  user?: SidebarUser | null
 }
 
 interface NavItemProps {
@@ -30,10 +39,11 @@ function NavItem({ label, icon, active, expanded, onClick }: NavItemProps) {
   )
 }
 
-export function Sidebar({ screen, onNavigate, onSignOut }: SidebarProps) {
+export function Sidebar({ screen, onNavigate, onSignOut, user }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
   const [hoverExpand, setHoverExpand] = useState(false)
   const { openMenu, toggleMenu, setOpenMenu } = useMenu()
+  const profile = user ?? DEMO_USER
 
   const expanded = !collapsed || hoverExpand
   const overlay = collapsed && hoverExpand
@@ -119,9 +129,9 @@ export function Sidebar({ screen, onNavigate, onSignOut }: SidebarProps) {
                 toggleMenu('profile')
               }}
             >
-              <div className="profile-avatar">AM</div>
+              <div className="profile-avatar">{profile.initials}</div>
               <span className="profile-name" style={{ display: expanded ? 'inline' : 'none' }}>
-                Alex Morgan
+                {profile.name}
               </span>
               <span className="profile-caret" style={{ display: expanded ? 'inline' : 'none' }}>
                 ▾
@@ -130,8 +140,8 @@ export function Sidebar({ screen, onNavigate, onSignOut }: SidebarProps) {
             {openMenu === 'profile' && (
               <div className="profile-menu" onClick={(e) => e.stopPropagation()}>
                 <div className="profile-menu-header">
-                  <div className="profile-menu-name">Alex Morgan</div>
-                  <div className="profile-menu-email">alex@aldermoney.com</div>
+                  <div className="profile-menu-name">{profile.name}</div>
+                  <div className="profile-menu-email">{profile.email}</div>
                 </div>
                 <div
                   className="menu-item"

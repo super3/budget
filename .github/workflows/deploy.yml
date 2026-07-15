@@ -39,7 +39,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Build
-        # The site is served at the root of the custom domain (aldermoney.com)
+        # The site is served at the root of the custom domain (aldermoney.com).
+        # VITE_CLERK_PUBLISHABLE_KEY comes from a repository Actions variable
+        # (Settings -> Secrets and variables -> Actions -> Variables).
+        env:
+          VITE_CLERK_PUBLISHABLE_KEY: ${{ vars.VITE_CLERK_PUBLISHABLE_KEY }}
         run: npm run build -- --base=/
       - name: Setup Pages
         uses: actions/configure-pages@v5
