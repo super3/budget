@@ -1,8 +1,9 @@
-# Fern
+# Alder
 
 A personal budgeting app MVP — track net worth, accounts, and transactions in one place.
 
-Built with React, TypeScript, and Vite from the Fern MVP design handoff.
+Built with React, TypeScript, and Vite from the Fern MVP design handoff
+(the product has since been renamed from Fern to Alder — aldermoney.com).
 
 ## Pages
 
