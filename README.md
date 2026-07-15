@@ -4,7 +4,15 @@ A personal budgeting app MVP — track net worth, accounts, and transactions in 
 
 Built with React, TypeScript, and Vite from the Fern MVP design handoff.
 
-## Screens
+## Pages
+
+The landing page is the homepage; the app lives at `#app` (hash-based, so
+direct links work on GitHub Pages without server-side routing). "See the
+demo" opens the app; "Sign out" returns to the landing page.
+
+- **Landing** — hero with waitlist signup, product preview, stats strip, feature rows, CTA, and footer
+
+## App screens
 
 - **Dashboard** — net worth chart, recent transactions, and monthly cash flow, with a Customize menu to show/hide each card
 - **Accounts** — net worth history plus collapsible account groups (cash, credit cards, investments, property, loans) and an asset/liability summary with totals or percent view

@@ -15,16 +15,42 @@ import { Accounts, type GroupId, type RefreshState } from './screens/Accounts'
 import { AccountDetail } from './screens/AccountDetail'
 import { Transactions, type TxFilters } from './screens/Transactions'
 import { Settings, type NotifPrefs } from './screens/Settings'
+import { Landing } from './screens/Landing'
+
+// The landing page is the homepage; the app lives at #app so direct links
+// work on GitHub Pages without any server-side routing. Other hashes
+// (#features, #waitlist) are in-page anchors on the landing page.
+const pageFromHash = () => (window.location.hash === '#app' ? 'app' : 'landing')
 
 export default function App() {
+  const [page, setPage] = useState<'landing' | 'app'>(pageFromHash)
+
+  useEffect(() => {
+    const onHashChange = () => setPage(pageFromHash())
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
+
+  useEffect(() => {
+    if (page === 'app') window.scrollTo(0, 0)
+  }, [page])
+
+  const signOut = () => {
+    window.location.hash = ''
+    history.replaceState(null, '', window.location.pathname + window.location.search)
+    setPage('landing')
+  }
+
+  if (page === 'landing') return <Landing />
+
   return (
     <MenuProvider>
-      <AppShell />
+      <AppShell onSignOut={signOut} />
     </MenuProvider>
   )
 }
 
-function AppShell() {
+function AppShell({ onSignOut }: { onSignOut: () => void }) {
   const [screen, setScreen] = useState<Screen>('dashboard')
   const [selectedAccount, setSelectedAccount] = useState<Account>(DEFAULT_ACCOUNT)
   const [modal, setModal] = useState<ModalKind | null>(null)
@@ -63,7 +89,7 @@ function AppShell() {
 
   return (
     <div className="app">
-      <Sidebar screen={screen} onNavigate={setScreen} />
+      <Sidebar screen={screen} onNavigate={setScreen} onSignOut={onSignOut} />
 
       <div className="main">
         {screen === 'dashboard' && (
