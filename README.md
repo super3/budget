@@ -41,8 +41,10 @@ npm run preview  # serve the production build
 Pushes to `main` deploy to GitHub Pages via `.github/workflows/deploy.yml`
 (it can also be run manually from the Actions tab), using the standard
 `actions/deploy-pages` flow with **Settings → Pages → Source** set to
-**GitHub Actions**. The workflow builds with `--base=/<repo>/` so assets
-resolve under the project-site URL and deploys `dist/`.
+**GitHub Actions**. The site is served at the root of the custom domain
+(aldermoney.com, set under Settings → Pages), so the workflow builds with
+`--base=/`. If the custom domain is ever removed, switch the build back to
+`--base=/<repo>/` for the github.io project-site URL.
 
 If a deploy is rejected with "not allowed to deploy to github-pages due to
 environment protection rules", the `github-pages` environment's deployment

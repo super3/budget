@@ -39,8 +39,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
       - name: Build
-        # Project sites are served from https://<owner>.github.io/<repo>/
-        run: npm run build -- --base=/${{ github.event.repository.name }}/
+        # The site is served at the root of the custom domain (aldermoney.com)
+        run: npm run build -- --base=/
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
