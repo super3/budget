@@ -101,7 +101,7 @@ export function ModalHost({ modal, onClose }: ModalHostProps) {
               </div>
               <div>
                 <label className="field-label">Email</label>
-                <input className="field-input" defaultValue="alex@fern.money" />
+                <input className="field-input" defaultValue="alex@aldermoney.com" />
               </div>
             </>
           )}

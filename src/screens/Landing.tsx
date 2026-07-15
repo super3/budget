@@ -104,7 +104,7 @@ export function Landing() {
             <div className="sidebar-logo-mark">
               <LogoDiamond />
             </div>
-            <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.01em' }}>Fern</span>
+            <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.01em' }}>Alder</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
             <a href="#features" style={{ fontSize: 15, fontWeight: 500, color: 'var(--ink-soft)' }}>
@@ -149,7 +149,7 @@ export function Landing() {
           Know where every dollar lives.
         </h1>
         <p className="twp" style={{ margin: '22px auto 0 auto', maxWidth: 560, fontSize: 19, lineHeight: 1.55, color: 'var(--muted)' }}>
-          Fern brings your accounts, budget, and cash flow into one calm view — so you can spend with confidence and
+          Alder brings your accounts, budget, and cash flow into one calm view — so you can spend with confidence and
           save without thinking about it.
         </p>
         <div id="waitlist" style={{ marginTop: 30 }}>
@@ -210,7 +210,7 @@ export function Landing() {
                 padding: '3px 14px',
               }}
             >
-              app.fern.money
+              app.aldermoney.com
             </span>
             <span style={{ width: 38 }} />
           </div>
@@ -315,7 +315,7 @@ export function Landing() {
       {/* Feature rows */}
       <div id="features" style={{ maxWidth: 1120, margin: '0 auto', padding: '88px 32px 0 32px' }}>
         <div style={{ textAlign: 'center', marginBottom: 64 }}>
-          <div className="eyebrow">Why Fern</div>
+          <div className="eyebrow">Why Alder</div>
           <h2
             className="twb"
             style={{ margin: '12px auto 0 auto', maxWidth: 600, fontSize: 40, lineHeight: 1.08, fontWeight: 720, letterSpacing: '-0.025em' }}
@@ -323,7 +323,7 @@ export function Landing() {
             One calm view of your money.
           </h2>
           <p className="twp" style={{ margin: '16px auto 0 auto', maxWidth: 520, fontSize: 17, lineHeight: 1.55, color: 'var(--muted)' }}>
-            Most money apps shout at you. Fern quietly keeps everything organized, so five minutes a week is all it
+            Most money apps shout at you. Alder quietly keeps everything organized, so five minutes a week is all it
             takes.
           </p>
         </div>
@@ -382,7 +382,7 @@ export function Landing() {
           <FeatureText
             eyebrow="Budget"
             title="Budgets that breathe."
-            body="Fern drafts your first budget from real spending, then fills each category in as the month goes. Gentle nudges when you're close — never guilt trips."
+            body="Alder drafts your first budget from real spending, then fills each category in as the month goes. Gentle nudges when you're close — never guilt trips."
             link="Explore budgets →"
             order={2}
           />
@@ -433,7 +433,7 @@ export function Landing() {
           <FeatureText
             eyebrow="Recurring"
             title="No more subscription surprises."
-            body="Fern spots every recurring charge automatically and shows what's due before it hits — so the gym you forgot about doesn't hide in your statement."
+            body="Alder spots every recurring charge automatically and shows what's due before it hits — so the gym you forgot about doesn't hide in your statement."
             link="Explore recurring →"
           />
           <div className="feature-card" style={{ padding: '8px 0' }}>
@@ -571,7 +571,7 @@ export function Landing() {
                     <polygon points="10,2.5 17.5,10 10,17.5 2.5,10" fill="#FFFFFF" />
                   </svg>
                 </div>
-                <span style={{ fontSize: 16, fontWeight: 700 }}>Fern</span>
+                <span style={{ fontSize: 16, fontWeight: 700 }}>Alder</span>
               </div>
               <p style={{ margin: '12px 0 0 0', fontSize: 13.5, lineHeight: 1.55, color: 'var(--faint)', maxWidth: 220 }}>
                 The calm home for your money. Accounts, budget, and cash flow — one view.
@@ -615,7 +615,7 @@ export function Landing() {
               paddingTop: 20,
             }}
           >
-            <span style={{ fontSize: 13, color: 'var(--fainter)' }}>© 2026 Fern Money, Inc. · Made for calmer money</span>
+            <span style={{ fontSize: 13, color: 'var(--fainter)' }}>© 2026 Alder Money, Inc. · Made for calmer money</span>
             <span style={{ fontSize: 13, color: 'var(--fainter)' }}>Bank-grade 256-bit encryption · Read-only connections</span>
           </div>
         </div>

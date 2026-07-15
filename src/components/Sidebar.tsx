@@ -66,7 +66,7 @@ export function Sidebar({ screen, onNavigate, onSignOut }: SidebarProps) {
               <LogoDiamond />
             </div>
             <span className="sidebar-logo-name" style={{ display: expanded ? 'inline' : 'none' }}>
-              Fern
+              Alder
             </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -131,7 +131,7 @@ export function Sidebar({ screen, onNavigate, onSignOut }: SidebarProps) {
               <div className="profile-menu" onClick={(e) => e.stopPropagation()}>
                 <div className="profile-menu-header">
                   <div className="profile-menu-name">Alex Morgan</div>
-                  <div className="profile-menu-email">alex@fern.money</div>
+                  <div className="profile-menu-email">alex@aldermoney.com</div>
                 </div>
                 <div
                   className="menu-item"

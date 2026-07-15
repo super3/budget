@@ -70,7 +70,7 @@ export function Settings({ section, onSetSection, notif, onFlipNotif, onEditProf
                     <Avatar initials="AM" bg="oklch(0.85 0.05 165)" fg="oklch(0.35 0.08 165)" size={44} fontSize={15} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 15, fontWeight: 600 }}>Alex Morgan</div>
-                      <div style={{ fontSize: 13.5, color: 'var(--faint)' }}>alex@fern.money</div>
+                      <div style={{ fontSize: 13.5, color: 'var(--faint)' }}>alex@aldermoney.com</div>
                     </div>
                     <div className="btn-small" onClick={onEditProfile}>
                       Edit profile
