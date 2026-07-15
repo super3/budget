@@ -33,6 +33,10 @@ body {
   padding: 0;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 a {
   color: var(--accent);
   text-decoration: none;
@@ -48,7 +52,7 @@ a:hover {
 }
 
 #root {
-  height: 100vh;
+  min-height: 100vh;
 }
 
 .app {

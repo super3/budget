@@ -6,6 +6,7 @@ import { AccountsIcon, DashboardIcon, LogoDiamond, SidebarCollapseIcon, Transact
 interface SidebarProps {
   screen: Screen
   onNavigate: (screen: Screen) => void
+  onSignOut: () => void
 }
 
 interface NavItemProps {
@@ -29,7 +30,7 @@ function NavItem({ label, icon, active, expanded, onClick }: NavItemProps) {
   )
 }
 
-export function Sidebar({ screen, onNavigate }: SidebarProps) {
+export function Sidebar({ screen, onNavigate, onSignOut }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
   const [hoverExpand, setHoverExpand] = useState(false)
   const { openMenu, toggleMenu, setOpenMenu } = useMenu()
@@ -141,7 +142,13 @@ export function Sidebar({ screen, onNavigate }: SidebarProps) {
                 >
                   Settings
                 </div>
-                <div className="menu-item" onClick={() => setOpenMenu(null)}>
+                <div
+                  className="menu-item"
+                  onClick={() => {
+                    setOpenMenu(null)
+                    onSignOut()
+                  }}
+                >
                   Sign out
                 </div>
               </div>
