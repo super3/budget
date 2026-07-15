@@ -36,6 +36,21 @@ npm run lint     # oxlint
 npm run preview  # serve the production build
 ```
 
+## Clerk (waitlist + login)
+
+The landing-page waitlist forms submit to [Clerk](https://clerk.com)'s
+waitlist (`clerk.joinWaitlist`), the nav "Log in" opens Clerk's sign-in
+modal, and a signed-in user's name/email replace the demo persona in the
+app sidebar (Sign out ends the Clerk session). Setup:
+
+The publishable key is hardcoded in `src/clerk.ts` (publishable keys are
+public by design). To use a different Clerk instance — e.g. a production
+`pk_live` key — set `VITE_CLERK_PUBLISHABLE_KEY`, which overrides the
+default: locally via `.env.local` (see `.env.example`), and in deploys via
+a repository **Actions variable** (Settings → Secrets and variables →
+Actions → Variables). Waitlist sign-up mode must be enabled in the Clerk
+dashboard (Configure → Restrictions).
+
 ## Deployment
 
 Pushes to `main` deploy to GitHub Pages via `.github/workflows/deploy.yml`

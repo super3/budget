@@ -16,6 +16,8 @@ import { AccountDetail } from './screens/AccountDetail'
 import { Transactions, type TxFilters } from './screens/Transactions'
 import { Settings, type NotifPrefs } from './screens/Settings'
 import { Landing } from './screens/Landing'
+import { getClerk } from './clerk'
+import type { SidebarUser } from './components/Sidebar'
 
 // The landing page is the homepage; the app lives at #app so direct links
 // work on GitHub Pages without any server-side routing. Other hashes
@@ -36,9 +38,14 @@ export default function App() {
   }, [page])
 
   const signOut = () => {
-    window.location.hash = ''
-    history.replaceState(null, '', window.location.pathname + window.location.search)
-    setPage('landing')
+    const finish = () => {
+      window.location.hash = ''
+      history.replaceState(null, '', window.location.pathname + window.location.search)
+      setPage('landing')
+    }
+    // If a Clerk session exists, end it for real before returning home.
+    if (window.Clerk?.user) window.Clerk.signOut().then(finish, finish)
+    else finish()
   }
 
   if (page === 'landing') return <Landing />
@@ -48,6 +55,12 @@ export default function App() {
       <AppShell onSignOut={signOut} />
     </MenuProvider>
   )
+}
+
+function initialsOf(name: string): string {
+  const words = name.trim().split(/\s+/)
+  const letters = words.length >= 2 ? [words[0][0], words[1][0]] : [name[0], name[1] ?? '']
+  return letters.join('').toUpperCase()
 }
 
 function AppShell({ onSignOut }: { onSignOut: () => void }) {
@@ -73,6 +86,25 @@ function AppShell({ onSignOut }: { onSignOut: () => void }) {
   const refreshTimers = useRef<ReturnType<typeof setTimeout>[]>([])
   useEffect(() => () => refreshTimers.current.forEach(clearTimeout), [])
 
+  // Show the signed-in Clerk user in the sidebar when there is one; the demo
+  // persona stays in place for signed-out visitors (or if Clerk isn't set up).
+  const [clerkUser, setClerkUser] = useState<SidebarUser | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    getClerk()
+      .then((clerk) => {
+        const u = clerk.user
+        if (cancelled || !u) return
+        const email = u.primaryEmailAddress?.emailAddress ?? ''
+        const name = u.fullName || u.firstName || email || 'Account'
+        setClerkUser({ name, email, initials: initialsOf(name) })
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
   const doRefresh = () => {
     if (refresh !== 'idle') return
     setRefresh('busy')
@@ -89,7 +121,7 @@ function AppShell({ onSignOut }: { onSignOut: () => void }) {
 
   return (
     <div className="app">
-      <Sidebar screen={screen} onNavigate={setScreen} onSignOut={onSignOut} />
+      <Sidebar screen={screen} onNavigate={setScreen} onSignOut={onSignOut} user={clerkUser} />
 
       <div className="main">
         {screen === 'dashboard' && (

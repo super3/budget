@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, type FormEvent, type MouseEvent } from 'react'
 import '../landing.css'
 import { LogoDiamond } from '../components/icons'
 import { Avatar } from '../components/primitives'
+import { clerkErrorMessage, getClerk } from '../clerk'
 
 function CheckBadgeIcon() {
   return (
@@ -75,6 +76,79 @@ interface FeatureTextProps {
   order?: number
 }
 
+interface WaitlistFormProps {
+  dark?: boolean
+  joined: boolean
+  onJoined: () => void
+}
+
+function WaitlistForm({ dark, joined, onJoined }: WaitlistFormProps) {
+  const [email, setEmail] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  if (joined) {
+    return (
+      <div className={dark ? 'joined-pill-dark' : 'joined-pill'}>
+        <CheckBadgeIcon />
+        {JOINED_MESSAGE}
+      </div>
+    )
+  }
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault()
+    setSubmitting(true)
+    setError(null)
+    try {
+      const clerk = await getClerk()
+      await clerk.joinWaitlist({ emailAddress: email.trim() })
+      onJoined()
+    } catch (err) {
+      setError(clerkErrorMessage(err))
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <form onSubmit={submit} autoComplete="off" style={{ margin: 0 }}>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: 10, flexWrap: 'wrap' }}>
+        <input
+          type="email"
+          required
+          placeholder="you@email.com"
+          className={dark ? 'cta-input-dark' : 'hero-input'}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <button type="submit" className={dark ? 'join-btn-dark' : 'join-btn'} disabled={submitting}>
+          {submitting ? 'Joining…' : 'Join the waitlist'}
+        </button>
+      </div>
+      {error && <div className={`wl-error${dark ? ' dark' : ''}`}>{error}</div>}
+    </form>
+  )
+}
+
+// Open Clerk's sign-in modal in place; fall back to the app (the link's
+// target) if the visitor is already signed in or Clerk fails to load.
+async function handleLogin(e: MouseEvent) {
+  e.preventDefault()
+  try {
+    const clerk = await getClerk()
+    if (clerk.user) {
+      window.location.hash = 'app'
+      return
+    }
+    const options = { afterSignInUrl: '/#app', afterSignUpUrl: '/#app' }
+    if (clerk.openSignIn) clerk.openSignIn(options)
+    else if (clerk.redirectToSignIn) clerk.redirectToSignIn(options)
+    else window.location.hash = 'app'
+  } catch {
+    window.location.hash = 'app'
+  }
+}
+
 function FeatureText({ eyebrow, title, body, link, order }: FeatureTextProps) {
   return (
     <div style={order ? { order } : undefined}>
@@ -113,6 +187,13 @@ export function Landing() {
           </div>
           <div style={{ flex: 1 }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <a
+              href="#app"
+              onClick={handleLogin}
+              style={{ fontSize: 15, fontWeight: 500, color: 'var(--ink-soft)', marginRight: 8 }}
+            >
+              Log in
+            </a>
             <a href="#app" className="demo-btn">
               See the demo
             </a>
@@ -153,19 +234,7 @@ export function Landing() {
           save without thinking about it.
         </p>
         <div id="waitlist" style={{ marginTop: 30 }}>
-          {joined ? (
-            <div className="joined-pill">
-              <CheckBadgeIcon />
-              {JOINED_MESSAGE}
-            </div>
-          ) : (
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <input placeholder="you@email.com" className="hero-input" />
-              <div className="join-btn" onClick={() => setJoined(true)}>
-                Join the waitlist
-              </div>
-            </div>
-          )}
+          <WaitlistForm joined={joined} onJoined={() => setJoined(true)} />
         </div>
         <div style={{ marginTop: 14, fontSize: 14, color: 'var(--fainter)' }}>
           Invites roll out weekly ·{' '}
@@ -533,19 +602,7 @@ export function Landing() {
             We invite new members from the waitlist every week. Add your email and we'll save your spot.
           </p>
           <div style={{ marginTop: 28 }}>
-            {joined ? (
-              <div className="joined-pill-dark">
-                <CheckBadgeIcon />
-                {JOINED_MESSAGE}
-              </div>
-            ) : (
-              <div style={{ display: 'flex', justifyContent: 'center', gap: 10, flexWrap: 'wrap' }}>
-                <input placeholder="you@email.com" className="cta-input-dark" />
-                <div className="join-btn-dark" onClick={() => setJoined(true)}>
-                  Join the waitlist
-                </div>
-              </div>
-            )}
+            <WaitlistForm dark joined={joined} onJoined={() => setJoined(true)} />
           </div>
         </div>
       </div>
