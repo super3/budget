@@ -24,7 +24,12 @@ declare global {
   }
 }
 
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string | undefined
+// Publishable keys are public by design (they ship in the page source).
+// The env var can override this, e.g. to swap in a pk_live key at build time.
+const DEFAULT_PUBLISHABLE_KEY = 'pk_test_Z29vZC1iZWRidWctNDguY2xlcmsuYWNjb3VudHMuZGV2JA'
+
+const PUBLISHABLE_KEY =
+  (import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string | undefined) || DEFAULT_PUBLISHABLE_KEY
 
 // The frontend API domain is base64-encoded inside the publishable key
 // (pk_test_... / pk_live_...), with a trailing "$".

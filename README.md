@@ -43,16 +43,13 @@ waitlist (`clerk.joinWaitlist`), the nav "Log in" opens Clerk's sign-in
 modal, and a signed-in user's name/email replace the demo persona in the
 app sidebar (Sign out ends the Clerk session). Setup:
 
-1. Create a Clerk application and enable **Waitlist** sign-up mode
-   (Configure → Restrictions).
-2. Copy the **publishable key** (Configure → API keys).
-3. Local dev: `cp .env.example .env.local` and fill in
-   `VITE_CLERK_PUBLISHABLE_KEY`.
-4. Deploys: add `VITE_CLERK_PUBLISHABLE_KEY` as a repository **Actions
-   variable** (Settings → Secrets and variables → Actions → Variables).
-
-Without a key the site still works — waitlist submissions show a
-"not configured" message and Log in falls through to the demo app.
+The publishable key is hardcoded in `src/clerk.ts` (publishable keys are
+public by design). To use a different Clerk instance — e.g. a production
+`pk_live` key — set `VITE_CLERK_PUBLISHABLE_KEY`, which overrides the
+default: locally via `.env.local` (see `.env.example`), and in deploys via
+a repository **Actions variable** (Settings → Secrets and variables →
+Actions → Variables). Waitlist sign-up mode must be enabled in the Clerk
+dashboard (Configure → Restrictions).
 
 ## Deployment
 
