@@ -30,14 +30,16 @@ npm run preview  # serve the production build
 ## Deployment
 
 Pushes to `main` deploy to GitHub Pages via `.github/workflows/deploy.yml`
-(it can also be run manually from the Actions tab). The workflow builds with
-`--base=/<repo>/` so assets resolve under the project-site URL and publishes
-`dist/` to the `gh-pages` branch.
+(it can also be run manually from the Actions tab), using the standard
+`actions/deploy-pages` flow with **Settings → Pages → Source** set to
+**GitHub Actions**. The workflow builds with `--base=/<repo>/` so assets
+resolve under the project-site URL and deploys `dist/`.
 
-One-time setup: set **Settings → Pages → Source** to **Deploy from a branch**
-with branch `gh-pages` / `(root)`. The Actions token cannot change this
-setting itself, so it must be done manually once; after that, every push of
-the `gh-pages` branch publishes automatically.
+If a deploy is rejected with "not allowed to deploy to github-pages due to
+environment protection rules", the `github-pages` environment's deployment
+branch policy doesn't allow `main` — delete the environment under
+**Settings → Environments** (it is recreated correctly on the next run) or
+add `main` to its allowed deployment branches.
 
 ## Project structure
 
