@@ -73,6 +73,13 @@ Sandbox smoke test (no UI, uses /sandbox/public_token/create):
 cd server && npm run spike
 ```
 
+Tests (Jest + supertest + pg-mem, 100% coverage enforced by the config —
+same setup as llmjob; also run in CI via `.github/workflows/test.yml`):
+
+```sh
+cd server && npm test
+```
+
 Deploys on Railway: create a service from this repo with **Root Directory
 `server`**, attach the Postgres database (`DATABASE_URL` via
 `${{Postgres.DATABASE_URL}}`), and set the variables from `.env.example`.

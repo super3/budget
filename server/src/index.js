@@ -35,7 +35,7 @@ app.use('/api/plaid', requireAuth, balancesRouter)
 app.use('/api/plaid', requireAuth, transactionsRouter)
 
 // Central error handler: log Plaid error payloads, never leak them raw.
-app.use((err, req, res, next) => {
+app.use((err, req, res, _next) => {
   console.error('API error:', err?.response?.data || err)
   res.status(500).json({ error: 'Internal error' })
 })
