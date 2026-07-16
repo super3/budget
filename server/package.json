@@ -1,0 +1,28 @@
+{
+  "name": "alder-server",
+  "version": "0.1.0",
+  "description": "Alder API — Plaid bank connections for balances and transactions.",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "start": "node-pg-migrate up -m migrations && node src/index.js",
+    "dev": "node-pg-migrate up -m migrations && node --watch src/index.js",
+    "migrate": "node-pg-migrate -m migrations",
+    "migrate:up": "node-pg-migrate up -m migrations",
+    "migrate:down": "node-pg-migrate down -m migrations",
+    "migrate:create": "node-pg-migrate create -m migrations --migration-file-language cjs",
+    "spike": "node --env-file=.env scripts/plaid-sandbox-spike.mjs"
+  },
+  "dependencies": {
+    "@clerk/express": "^2.1.42",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "node-pg-migrate": "^8.0.4",
+    "pg": "^8.22.0",
+    "plaid": "^43.0.0"
+  }
+}

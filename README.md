@@ -51,6 +51,32 @@ a repository **Actions variable** (Settings → Secrets and variables →
 Actions → Variables). Waitlist sign-up mode must be enabled in the Clerk
 dashboard (Configure → Restrictions).
 
+## Backend (Plaid API)
+
+`server/` is an Express API that connects real bank accounts through
+[Plaid](https://plaid.com/docs/) — Link token creation, public-token
+exchange, real-time balances (`/accounts/balance/get`), and cursor-based
+transaction sync (`/transactions/sync`) with a webhook receiver. Requests
+are authenticated with Clerk; data lives in Postgres with
+`node-pg-migrate` migrations that run automatically on `npm start`.
+
+```sh
+cd server
+npm install
+cp .env.example .env   # fill in Plaid + Clerk keys
+npm run dev
+```
+
+Sandbox smoke test (no UI, uses /sandbox/public_token/create):
+
+```sh
+cd server && npm run spike
+```
+
+Deploys on Railway: create a service from this repo with **Root Directory
+`server`**, attach the Postgres database (`DATABASE_URL` via
+`${{Postgres.DATABASE_URL}}`), and set the variables from `.env.example`.
+
 ## Deployment
 
 Pushes to `main` deploy to GitHub Pages via `.github/workflows/deploy.yml`
