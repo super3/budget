@@ -1,7 +1,9 @@
-export function LogoDiamond() {
+// Two-tone leaf mark: full leaf at 55% opacity with the lower half solid.
+export function LogoLeaf({ size = 15, fill = '#FFFFFF' }: { size?: number; fill?: string }) {
   return (
-    <svg width="15" height="15" viewBox="0 0 20 20">
-      <polygon points="10,2.5 17.5,10 10,17.5 2.5,10" fill="#FFFFFF" />
+    <svg width={size} height={size} viewBox="0 0 20 20">
+      <path d="M1.9 18.4 C10.4 20.4 16.8 13.4 16.8 1.6 C10.7 8.1 6 13.4 1.9 18.4 Z" fill={fill} opacity="0.55" />
+      <path d="M1.9 18.4 C1.1 10.1 6.3 3.5 16.8 1.6 C10.7 8.1 6 13.4 1.9 18.4 Z" fill={fill} />
     </svg>
   )
 }

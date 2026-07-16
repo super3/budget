@@ -1,6 +1,6 @@
 import { useState, type FormEvent, type MouseEvent } from 'react'
 import '../landing.css'
-import { LogoDiamond } from '../components/icons'
+import { LogoLeaf } from '../components/icons'
 import { Avatar } from '../components/primitives'
 import { clerkErrorMessage, getClerk } from '../clerk'
 
@@ -23,16 +23,15 @@ function CheckBadgeIcon() {
 const JOINED_MESSAGE = "You're on the list — we'll email your invite soon."
 
 const HERO_STATS = [
-  { value: '2,400+', label: 'People on the waitlist' },
-  { value: '13,000+', label: 'Banks & institutions supported' },
-  { value: '$1.2B', label: 'Tracked by members every month' },
   { value: '5 min', label: 'From sign-up to first budget' },
+  { value: 'Read-only', label: 'Bank connections, encrypted end to end' },
+  { value: 'No ads', label: 'We never sell your data' },
 ]
 
-const PREVIEW_TILES = [
-  { label: 'Budget remaining', value: '$617.34' },
-  { label: 'Net saved · July', value: '+$3,617.34', green: true },
-  { label: 'Accounts synced', value: '9' },
+const PREVIEW_TRANSACTIONS = [
+  { initials: 'GB', bg: 'oklch(0.95 0.04 145)', fg: 'oklch(0.42 0.09 145)', name: 'Green Basket Market', amount: '−$86.42' },
+  { initials: 'AC', bg: 'oklch(0.95 0.04 165)', fg: 'oklch(0.4 0.09 165)', name: 'Acme Co. Payroll', amount: '+$4,250.00', positive: true },
+  { initials: 'CT', bg: 'oklch(0.95 0.04 250)', fg: 'oklch(0.42 0.09 250)', name: 'City Transit', amount: '−$2.90' },
 ]
 
 const ACCOUNT_ROWS = [
@@ -176,7 +175,7 @@ export function Landing() {
         <div className="landing-nav-inner">
           <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
             <div className="sidebar-logo-mark">
-              <LogoDiamond />
+              <LogoLeaf />
             </div>
             <span style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.01em' }}>Alder</span>
           </div>
@@ -194,9 +193,6 @@ export function Landing() {
             >
               Log in
             </a>
-            <a href="#app" className="demo-btn">
-              See the demo
-            </a>
             <a href="#waitlist" className="waitlist-nav-btn">
               Join the waitlist
             </a>
@@ -206,41 +202,18 @@ export function Landing() {
 
       {/* Hero */}
       <div style={{ maxWidth: 1120, margin: '0 auto', padding: '72px 32px 0 32px', textAlign: 'center' }}>
-        <div
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 8,
-            background: '#FFFFFF',
-            border: '1px solid var(--card-border)',
-            borderRadius: 999,
-            padding: '6px 14px',
-            fontSize: 13.5,
-            fontWeight: 600,
-            color: 'var(--icon)',
-          }}
-        >
-          <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'oklch(0.62 0.12 160)' }} />
-          The calm alternative to spreadsheet budgeting
-        </div>
         <h1
           className="twb"
-          style={{ margin: '22px auto 0 auto', maxWidth: 780, fontSize: 60, lineHeight: 1.04, fontWeight: 750, letterSpacing: '-0.032em' }}
+          style={{ margin: '0 auto', maxWidth: 780, fontSize: 60, lineHeight: 1.04, fontWeight: 750, letterSpacing: '-0.032em' }}
         >
           Know where every dollar lives.
         </h1>
-        <p className="twp" style={{ margin: '22px auto 0 auto', maxWidth: 560, fontSize: 19, lineHeight: 1.55, color: 'var(--muted)' }}>
+        <p className="twp" style={{ margin: '22px auto 0 auto', maxWidth: 640, fontSize: 19, lineHeight: 1.55, color: 'var(--muted)' }}>
           Alder brings your accounts, budget, and cash flow into one calm view — so you can spend with confidence and
-          save without thinking about it.
+          save without thinking.
         </p>
         <div id="waitlist" style={{ marginTop: 30 }}>
           <WaitlistForm joined={joined} onJoined={() => setJoined(true)} />
-        </div>
-        <div style={{ marginTop: 14, fontSize: 14, color: 'var(--fainter)' }}>
-          Invites roll out weekly ·{' '}
-          <a href="#app" style={{ fontWeight: 600 }}>
-            Or see the demo →
-          </a>
         </div>
 
         {/* Product preview */}
@@ -332,29 +305,85 @@ export function Landing() {
                 }}
               />
             </div>
-            <div style={{ display: 'flex', gap: 12, marginTop: 18, flexWrap: 'wrap' }}>
-              {PREVIEW_TILES.map((tile) => (
+            <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 12, marginTop: 18 }}>
+              <div style={{ background: 'var(--bg)', border: '1px solid var(--divider)', borderRadius: 10, overflow: 'hidden' }}>
                 <div
-                  key={tile.label}
                   style={{
-                    flex: '1 1 160px',
-                    background: 'var(--bg)',
-                    border: '1px solid var(--divider)',
-                    borderRadius: 10,
-                    padding: '12px 16px',
+                    padding: '11px 16px 8px 16px',
+                    fontSize: 12,
+                    letterSpacing: '0.07em',
+                    fontWeight: 650,
+                    color: 'var(--faint)',
+                    textTransform: 'uppercase',
                   }}
                 >
-                  <div style={{ fontSize: 12, letterSpacing: '0.07em', fontWeight: 650, color: 'var(--faint)', textTransform: 'uppercase' }}>
-                    {tile.label}
-                  </div>
-                  <div
-                    className="num"
-                    style={{ fontSize: 18, fontWeight: 650, marginTop: 3, color: tile.green ? 'var(--positive)' : undefined }}
-                  >
-                    {tile.value}
-                  </div>
+                  Recent transactions
                 </div>
-              ))}
+                {PREVIEW_TRANSACTIONS.map((t) => (
+                  <div
+                    key={t.initials}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      padding: '9px 16px',
+                      borderTop: '1px solid var(--divider)',
+                    }}
+                  >
+                    <Avatar initials={t.initials} bg={t.bg} fg={t.fg} size={28} fontSize={11} />
+                    <div style={{ flex: 1, minWidth: 0, fontSize: 13.5, fontWeight: 600 }}>{t.name}</div>
+                    <span
+                      className="num"
+                      style={{
+                        fontSize: 13.5,
+                        fontWeight: t.positive ? 650 : 600,
+                        color: t.positive ? 'var(--positive)' : undefined,
+                      }}
+                    >
+                      {t.amount}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ background: 'var(--bg)', border: '1px solid var(--divider)', borderRadius: 10, padding: '12px 16px' }}>
+                <div style={{ fontSize: 12, letterSpacing: '0.07em', fontWeight: 650, color: 'var(--faint)', textTransform: 'uppercase' }}>
+                  Cash flow · July
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginTop: 10 }}>
+                  <span style={{ color: 'var(--muted)' }}>Income</span>
+                  <span className="num" style={{ fontWeight: 600 }}>
+                    $8,650
+                  </span>
+                </div>
+                <div style={{ height: 6, borderRadius: 999, background: '#EFEDE6', marginTop: 5, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: '100%', borderRadius: 999, background: 'oklch(0.62 0.12 160)' }} />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginTop: 9 }}>
+                  <span style={{ color: 'var(--muted)' }}>Spending</span>
+                  <span className="num" style={{ fontWeight: 600 }}>
+                    $5,033
+                  </span>
+                </div>
+                <div style={{ height: 6, borderRadius: 999, background: '#EFEDE6', marginTop: 5, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: '58%', borderRadius: 999, background: '#8A8E85' }} />
+                </div>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    borderTop: '1px solid var(--divider)',
+                    marginTop: 11,
+                    paddingTop: 9,
+                    fontSize: 13,
+                  }}
+                >
+                  <span style={{ color: 'var(--muted)' }}>Net saved</span>
+                  <span className="num" style={{ fontWeight: 650, color: 'var(--positive)' }}>
+                    +$3,617
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -405,7 +434,7 @@ export function Landing() {
             body="Checking, cards, loans, and investments sync automatically into a single timeline. Net worth updates itself — no more tab-hopping between five bank logins."
             link="Explore accounts →"
           />
-          <div className="feature-card" style={{ padding: '8px 0' }}>
+          <div className="feature-card" style={{ padding: '8px 0 0 0', overflow: 'hidden' }}>
             {ACCOUNT_ROWS.map((row, i) => (
               <div
                 key={row.name}
@@ -487,9 +516,7 @@ export function Landing() {
                 borderRadius: 9,
               }}
             >
-              <svg width="13" height="13" viewBox="0 0 20 20">
-                <polygon points="10,2.5 17.5,10 10,17.5 2.5,10" fill="oklch(0.5 0.1 165)" />
-              </svg>
+              <LogoLeaf size={13} fill="oklch(0.5 0.1 165)" />
               <span style={{ fontSize: 13, color: '#3E4A42' }}>
                 <b style={{ fontWeight: 650 }}>On track.</b> Spending is 6% below plan this month.
               </span>
@@ -624,9 +651,7 @@ export function Landing() {
                     justifyContent: 'center',
                   }}
                 >
-                  <svg width="13" height="13" viewBox="0 0 20 20">
-                    <polygon points="10,2.5 17.5,10 10,17.5 2.5,10" fill="#FFFFFF" />
-                  </svg>
+                  <LogoLeaf size={13} />
                 </div>
                 <span style={{ fontSize: 16, fontWeight: 700 }}>Alder</span>
               </div>

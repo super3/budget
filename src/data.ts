@@ -115,7 +115,7 @@ export const ACCOUNT_GROUPS: AccountGroup[] = [
       {
         id: 'brokerage',
         name: 'Brokerage',
-        institution: 'Aspen Invest · Taxable',
+        institution: 'Birch Invest · Taxable',
         balance: '$43,086.36',
         initials: 'AI',
         avatarBg: 'oklch(0.95 0.04 300)',
@@ -289,7 +289,7 @@ export const INSTITUTIONS: Institution[] = [
   { name: 'Meridian Savings', sub: '1 account · Synced 2 hours ago', initials: 'MS', avatarBg: 'oklch(0.95 0.04 145)', avatarFg: 'oklch(0.42 0.09 145)', status: 'connected' },
   { name: 'Summit Card Co.', sub: '1 account · Sync paused', initials: 'SC', avatarBg: 'oklch(0.95 0.05 85)', avatarFg: 'oklch(0.45 0.09 85)', status: 'reconnect' },
   { name: 'Vertex Funds', sub: '2 accounts · Synced 1 day ago', initials: 'VF', avatarBg: 'oklch(0.95 0.04 165)', avatarFg: 'oklch(0.4 0.09 165)', status: 'connected' },
-  { name: 'Aspen Invest', sub: '1 account · Synced 1 day ago', initials: 'AI', avatarBg: 'oklch(0.95 0.04 300)', avatarFg: 'oklch(0.42 0.09 300)', status: 'connected' },
+  { name: 'Birch Invest', sub: '1 account · Synced 1 day ago', initials: 'AI', avatarBg: 'oklch(0.95 0.04 300)', avatarFg: 'oklch(0.42 0.09 300)', status: 'connected' },
 ]
 
 export const MENUS = {

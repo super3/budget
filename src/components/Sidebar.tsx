@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { Screen } from '../data'
 import { useMenu } from './menu'
-import { AccountsIcon, DashboardIcon, LogoDiamond, SidebarCollapseIcon, TransactionsIcon } from './icons'
+import { AccountsIcon, DashboardIcon, LogoLeaf, SidebarCollapseIcon, TransactionsIcon } from './icons'
 
 export interface SidebarUser {
   name: string
@@ -73,7 +73,7 @@ export function Sidebar({ screen, onNavigate, onSignOut, user }: SidebarProps) {
             }}
           >
             <div className="sidebar-logo-mark">
-              <LogoDiamond />
+              <LogoLeaf />
             </div>
             <span className="sidebar-logo-name" style={{ display: expanded ? 'inline' : 'none' }}>
               Alder
