@@ -28,21 +28,27 @@ export function SidebarRightIcon() {
 
 export function DashboardIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#5B6058" strokeWidth="1.6">
-      <rect x="3" y="3" width="6" height="6" rx="1.5" />
-      <rect x="11" y="3" width="6" height="6" rx="1.5" />
-      <rect x="3" y="11" width="6" height="6" rx="1.5" />
-      <rect x="11" y="11" width="6" height="6" rx="1.5" />
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 20 20"
+      fill="none"
+      stroke="#5B6058"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3.5 8.5 L10 3 L16.5 8.5 L16.5 16.2 L12 16.2 L12 11.5 L8 11.5 L8 16.2 L3.5 16.2 Z" />
     </svg>
   )
 }
 
 export function AccountsIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#5B6058" strokeWidth="1.6">
-      <rect x="3" y="3.5" width="14" height="3.5" rx="1.75" />
-      <rect x="3" y="8.25" width="14" height="3.5" rx="1.75" />
-      <rect x="3" y="13" width="14" height="3.5" rx="1.75" />
+    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="#5B6058" strokeWidth="1.6" strokeLinecap="round">
+      <line x1="3" y1="4.5" x2="17" y2="4.5" />
+      <line x1="3" y1="10" x2="17" y2="10" />
+      <line x1="3" y1="15.5" x2="17" y2="15.5" />
     </svg>
   )
 }
