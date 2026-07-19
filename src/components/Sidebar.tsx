@@ -9,12 +9,13 @@ export interface SidebarUser {
   initials: string
 }
 
-const DEMO_USER: SidebarUser = { name: 'Alex Morgan', email: 'alex@aldermoney.com', initials: 'AM' }
+const GUEST: SidebarUser = { name: 'Not logged in', email: 'Log in to sync your banks', initials: '?' }
 
 interface SidebarProps {
   screen: Screen
   onNavigate: (screen: Screen) => void
   onSignOut: () => void
+  onLogIn: () => void
   user?: SidebarUser | null
 }
 
@@ -39,11 +40,11 @@ function NavItem({ label, icon, active, expanded, onClick }: NavItemProps) {
   )
 }
 
-export function Sidebar({ screen, onNavigate, onSignOut, user }: SidebarProps) {
+export function Sidebar({ screen, onNavigate, onSignOut, onLogIn, user }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
   const [hoverExpand, setHoverExpand] = useState(false)
   const { openMenu, toggleMenu, setOpenMenu } = useMenu()
-  const profile = user ?? DEMO_USER
+  const profile = user ?? GUEST
 
   const expanded = !collapsed || hoverExpand
   const overlay = collapsed && hoverExpand
@@ -156,10 +157,11 @@ export function Sidebar({ screen, onNavigate, onSignOut, user }: SidebarProps) {
                   className="menu-item"
                   onClick={() => {
                     setOpenMenu(null)
-                    onSignOut()
+                    if (user) onSignOut()
+                    else onLogIn()
                   }}
                 >
-                  Sign out
+                  {user ? 'Sign out' : 'Log in'}
                 </div>
               </div>
             )}

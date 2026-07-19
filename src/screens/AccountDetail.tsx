@@ -1,14 +1,15 @@
-import { ACCOUNT_ACTIVITY, type Account } from '../data'
-import { AreaChart, Avatar, DETAIL_CHART } from '../components/primitives'
+import type { Account, Transaction } from '../data'
+import { Avatar } from '../components/primitives'
 import { TransactionRow } from '../components/TransactionRow'
 
 interface AccountDetailProps {
   account: Account
+  activity: Transaction[]
   onBack: () => void
   onViewTransactions: () => void
 }
 
-export function AccountDetail({ account, onBack, onViewTransactions }: AccountDetailProps) {
+export function AccountDetail({ account, activity, onBack, onViewTransactions }: AccountDetailProps) {
   return (
     <div className="screen">
       <div className="screen-header">
@@ -21,9 +22,6 @@ export function AccountDetail({ account, onBack, onViewTransactions }: AccountDe
           </span>
           <span style={{ fontSize: 14.5, color: '#C9C6BC' }}>/</span>
           <span className="screen-title">{account.name}</span>
-        </div>
-        <div className="screen-actions">
-          <div className="btn">Edit</div>
         </div>
       </div>
       <div className="screen-body">
@@ -41,7 +39,9 @@ export function AccountDetail({ account, onBack, onViewTransactions }: AccountDe
               <div style={{ fontSize: 13, color: 'var(--fainter)', marginTop: 2 }}>Updated {account.updated}</div>
             </div>
           </div>
-          <AreaChart spec={DETAIL_CHART} gradientId="adfill" style={{ marginTop: 20 }} />
+          <div className="chart-placeholder" style={{ height: 140, marginTop: 20 }}>
+            Balance history will build up as this account syncs.
+          </div>
         </div>
 
         <div className="card">
@@ -51,9 +51,13 @@ export function AccountDetail({ account, onBack, onViewTransactions }: AccountDe
               View all →
             </span>
           </div>
-          {ACCOUNT_ACTIVITY.map((t) => (
-            <TransactionRow key={t.merchant + t.amount} transaction={t} />
-          ))}
+          {activity.length > 0 ? (
+            activity.map((t) => <TransactionRow key={t.merchant + t.amount + t.sub} transaction={t} />)
+          ) : (
+            <div style={{ padding: '18px 20px', fontSize: 14, color: 'var(--faint)' }}>
+              No activity synced for this account yet.
+            </div>
+          )}
         </div>
       </div>
     </div>
