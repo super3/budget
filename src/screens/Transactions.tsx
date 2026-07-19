@@ -1,4 +1,4 @@
-import { MENUS, TRANSACTION_DAYS, type MenuKey, type Transaction } from '../data'
+import { MENUS, TRANSACTION_DAYS, type MenuKey, type Transaction, type TransactionDay } from '../data'
 import { Menu, MenuCheckItem, MenuOption } from '../components/menu'
 import { Avatar } from '../components/primitives'
 import { CalendarIcon, FilterIcon, SidebarRightIcon } from '../components/icons'
@@ -15,6 +15,8 @@ interface TransactionsProps {
   filters: TxFilters
   onFlipFilter: (key: keyof TxFilters) => void
   onAddTransaction: () => void
+  liveDays?: TransactionDay[] | null
+  liveCount?: number
 }
 
 function TransactionListRow({ transaction: t }: { transaction: Transaction }) {
@@ -35,7 +37,17 @@ function TransactionListRow({ transaction: t }: { transaction: Transaction }) {
   )
 }
 
-export function Transactions({ menuSel, onMenuSelect, filters, onFlipFilter, onAddTransaction }: TransactionsProps) {
+export function Transactions({
+  menuSel,
+  onMenuSelect,
+  filters,
+  onFlipFilter,
+  onAddTransaction,
+  liveDays,
+  liveCount = 0,
+}: TransactionsProps) {
+  const live = Boolean(liveDays && liveDays.length > 0)
+  const days = live ? liveDays! : TRANSACTION_DAYS
   return (
     <div className="screen">
       <div className="screen-header">
@@ -83,12 +95,20 @@ export function Transactions({ menuSel, onMenuSelect, filters, onFlipFilter, onA
       <div className="screen-body">
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
           <span className="num" style={{ fontSize: 14, color: 'var(--muted)' }}>
-            42 transactions this month · <b style={{ color: 'var(--ink)', fontWeight: 600 }}>−$5,032.66</b>
+            {live ? (
+              <>
+                {liveCount} transactions · <b style={{ color: 'var(--ink)', fontWeight: 600 }}>Plaid Sandbox</b>
+              </>
+            ) : (
+              <>
+                42 transactions this month · <b style={{ color: 'var(--ink)', fontWeight: 600 }}>−$5,032.66</b>
+              </>
+            )}
           </span>
         </div>
 
         <div className="card" style={{ overflow: 'hidden' }}>
-          {TRANSACTION_DAYS.map((day) => (
+          {days.map((day) => (
             <div key={day.label}>
               <div className="day-header">{day.label}</div>
               {day.transactions.map((t) => (

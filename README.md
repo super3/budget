@@ -57,6 +57,18 @@ a repository **Actions variable** (Settings → Secrets and variables →
 Actions → Variables). Waitlist sign-up mode must be enabled in the Clerk
 dashboard (Configure → Restrictions).
 
+## Connecting a bank (Plaid Sandbox)
+
+Signed-in users can connect banks from **Accounts → Add account →
+"Connect a bank with Plaid"**, which opens Plaid Link against the API.
+In Sandbox, pick any institution and sign in with `user_good` /
+`pass_good` (or `user_transactions_dynamic` for constantly-changing
+transactions). Once connected, the Accounts and Transactions screens
+show live balances, the computed net worth summary, and synced
+transactions; the demo data renders for signed-out visitors or when no
+banks are connected. The frontend reads the API base URL from
+`VITE_API_URL` (defaults to the Railway service URL).
+
 ## Backend (Plaid API)
 
 `server/` is an Express API that connects real bank accounts through

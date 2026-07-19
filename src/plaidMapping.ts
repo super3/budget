@@ -1,0 +1,208 @@
+// Maps live Plaid API data into the shapes the design screens already
+// render (AccountGroup / TransactionDay / summary), so connected users see
+// real data in the exact same UI the demo uses.
+import type { PlaidAccount, PlaidTransaction } from './api'
+import { CATEGORIES, type Account, type AccountGroup, type Category, type Transaction, type TransactionDay } from './data'
+
+const AVATAR_PALETTE = [
+  { bg: 'oklch(0.95 0.04 250)', fg: 'oklch(0.42 0.09 250)' },
+  { bg: 'oklch(0.95 0.04 145)', fg: 'oklch(0.42 0.09 145)' },
+  { bg: 'oklch(0.95 0.05 85)', fg: 'oklch(0.45 0.09 85)' },
+  { bg: 'oklch(0.95 0.04 165)', fg: 'oklch(0.4 0.09 165)' },
+  { bg: 'oklch(0.95 0.04 300)', fg: 'oklch(0.42 0.09 300)' },
+  { bg: 'oklch(0.95 0.05 25)', fg: 'oklch(0.45 0.11 25)' },
+  { bg: 'oklch(0.95 0.04 210)', fg: 'oklch(0.42 0.08 210)' },
+]
+
+function hashString(value: string): number {
+  let hash = 0
+  for (let i = 0; i < value.length; i++) hash = (hash * 31 + value.charCodeAt(i)) >>> 0
+  return hash
+}
+
+export function avatarFor(name: string) {
+  return AVATAR_PALETTE[hashString(name) % AVATAR_PALETTE.length]
+}
+
+export function initialsOf(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean)
+  if (words.length === 0) return '··'
+  const letters = words.length >= 2 ? [words[0][0], words[1][0]] : [words[0][0], words[0][1] ?? '']
+  return letters.join('').toUpperCase()
+}
+
+export function formatMoney(value: number | string | null, currency: string | null = 'USD'): string {
+  if (value == null) return '—'
+  const num = typeof value === 'string' ? parseFloat(value) : value
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'USD' }).format(num)
+}
+
+function toDesignAccount(account: PlaidAccount): Account {
+  const label = account.institution_name || account.name
+  const { bg, fg } = avatarFor(label)
+  const subtype = account.subtype
+    ? account.subtype.charAt(0).toUpperCase() + account.subtype.slice(1)
+    : account.type.charAt(0).toUpperCase() + account.type.slice(1)
+  return {
+    id: account.account_id,
+    name: account.name + (account.mask ? ` ·· ${account.mask}` : ''),
+    institution: `${account.institution_name || 'Connected'} · ${subtype}`,
+    balance: formatMoney(account.balances.current, account.balances.iso_currency_code),
+    initials: initialsOf(label),
+    avatarBg: bg,
+    avatarFg: fg,
+    updated: 'just now',
+  }
+}
+
+const GROUP_FOR_TYPE: Record<string, AccountGroup['id']> = {
+  depository: 'cash',
+  credit: 'credit',
+  investment: 'invest',
+  brokerage: 'invest',
+  loan: 'loans',
+  other: 'property',
+}
+
+const GROUP_LABELS: Record<AccountGroup['id'], string> = {
+  cash: 'Cash',
+  credit: 'Credit cards',
+  invest: 'Investments',
+  property: 'Property',
+  loans: 'Loans',
+}
+
+export function mapAccountsToGroups(accounts: PlaidAccount[]): AccountGroup[] {
+  const byGroup = new Map<AccountGroup['id'], { accounts: Account[]; total: number }>()
+  for (const account of accounts) {
+    const groupId = GROUP_FOR_TYPE[account.type] || 'property'
+    const entry = byGroup.get(groupId) || { accounts: [], total: 0 }
+    entry.accounts.push(toDesignAccount(account))
+    entry.total += account.balances.current ?? 0
+    byGroup.set(groupId, entry)
+  }
+  const order: AccountGroup['id'][] = ['cash', 'credit', 'invest', 'property', 'loans']
+  return order
+    .filter((id) => byGroup.has(id))
+    .map((id) => ({
+      id,
+      label: GROUP_LABELS[id],
+      changeNote: 'Live from Plaid Sandbox',
+      total: formatMoney(byGroup.get(id)!.total),
+      accounts: byGroup.get(id)!.accounts,
+    }))
+}
+
+export interface LiveSummary {
+  assets: { total: string; segments: { label: string; width: string; color: string; amount: string; percent: string }[] }
+  liabilities: { total: string; segments: { label: string; width: string; color: string; amount: string; percent: string }[] }
+  netWorth: string
+}
+
+const ASSET_COLORS: Record<string, string> = {
+  Investments: 'oklch(0.62 0.12 165)',
+  Cash: 'oklch(0.62 0.12 85)',
+  Property: 'oklch(0.62 0.12 250)',
+}
+
+const LIABILITY_COLORS: Record<string, string> = {
+  Loans: 'oklch(0.62 0.12 300)',
+  'Credit cards': 'oklch(0.62 0.12 330)',
+}
+
+function buildSegments(parts: { label: string; amount: number }[], colors: Record<string, string>) {
+  const total = parts.reduce((sum, part) => sum + part.amount, 0)
+  return parts
+    .filter((part) => part.amount > 0)
+    .map((part) => {
+      const pct = total > 0 ? (part.amount / total) * 100 : 0
+      return {
+        label: part.label,
+        width: `${pct.toFixed(1)}%`,
+        color: colors[part.label] || 'oklch(0.62 0.12 25)',
+        amount: formatMoney(part.amount),
+        percent: `${pct.toFixed(1)}%`,
+      }
+    })
+}
+
+export function buildLiveSummary(accounts: PlaidAccount[]): LiveSummary {
+  const sums: Record<string, number> = {}
+  for (const account of accounts) {
+    const groupId = GROUP_FOR_TYPE[account.type] || 'property'
+    const label = GROUP_LABELS[groupId]
+    sums[label] = (sums[label] || 0) + (account.balances.current ?? 0)
+  }
+  const assetParts = ['Investments', 'Cash', 'Property']
+    .map((label) => ({ label, amount: sums[label] || 0 }))
+  const liabilityParts = ['Loans', 'Credit cards'].map((label) => ({ label, amount: sums[label] || 0 }))
+  const assetTotal = assetParts.reduce((sum, part) => sum + part.amount, 0)
+  const liabilityTotal = liabilityParts.reduce((sum, part) => sum + part.amount, 0)
+  return {
+    assets: { total: formatMoney(assetTotal), segments: buildSegments(assetParts, ASSET_COLORS) },
+    liabilities: { total: formatMoney(liabilityTotal), segments: buildSegments(liabilityParts, LIABILITY_COLORS) },
+    netWorth: formatMoney(assetTotal - liabilityTotal),
+  }
+}
+
+// Plaid personal_finance_category.primary -> the design's category pills.
+const CATEGORY_FOR_PFC: Record<string, Category> = {
+  FOOD_AND_DRINK: CATEGORIES.dining,
+  GENERAL_MERCHANDISE: CATEGORIES.shopping,
+  GENERAL_SERVICES: CATEGORIES.shopping,
+  TRANSPORTATION: CATEGORIES.transport,
+  TRAVEL: CATEGORIES.transport,
+  ENTERTAINMENT: CATEGORIES.entertainment,
+  RENT_AND_UTILITIES: CATEGORIES.utilities,
+  INCOME: CATEGORIES.income,
+  TRANSFER_IN: CATEGORIES.transfer,
+  TRANSFER_OUT: CATEGORIES.transfer,
+  LOAN_PAYMENTS: CATEGORIES.transfer,
+  BANK_FEES: CATEGORIES.utilities,
+  HOME_IMPROVEMENT: CATEGORIES.shopping,
+  MEDICAL: CATEGORIES.utilities,
+  PERSONAL_CARE: CATEGORIES.shopping,
+  GOVERNMENT_AND_NON_PROFIT: CATEGORIES.utilities,
+}
+
+function categoryFor(pfc: string | null): Category {
+  if (pfc && CATEGORY_FOR_PFC[pfc]) return CATEGORY_FOR_PFC[pfc]
+  return CATEGORIES.transfer
+}
+
+function dayLabel(dateStr: string): string {
+  const date = new Date(`${dateStr}T00:00:00`)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const diffDays = Math.round((today.getTime() - date.getTime()) / 86400000)
+  const formatted = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+  if (diffDays === 0) return `Today · ${formatted}`
+  if (diffDays === 1) return `Yesterday · ${formatted}`
+  return formatted
+}
+
+export function mapTransactionsToDays(transactions: PlaidTransaction[]): TransactionDay[] {
+  const byDate = new Map<string, Transaction[]>()
+  for (const txn of transactions) {
+    const amount = typeof txn.amount === 'string' ? parseFloat(txn.amount) : txn.amount
+    const positive = amount < 0 // Plaid: positive = money out
+    const merchant = txn.merchant_name || txn.name
+    const { bg, fg } = avatarFor(merchant)
+    const mapped: Transaction = {
+      merchant: merchant + (txn.pending ? ' (pending)' : ''),
+      sub: txn.account_name || txn.institution_name || 'Connected account',
+      category: categoryFor(txn.personal_finance_category),
+      amount: `${positive ? '+' : '−'}${formatMoney(Math.abs(amount), txn.iso_currency_code).replace('-', '')}`,
+      positive,
+      initials: initialsOf(merchant),
+      avatarBg: bg,
+      avatarFg: fg,
+    }
+    const list = byDate.get(txn.date) || []
+    list.push(mapped)
+    byDate.set(txn.date, list)
+  }
+  return [...byDate.entries()]
+    .sort(([a], [b]) => (a < b ? 1 : -1))
+    .map(([date, txns]) => ({ label: dayLabel(date), transactions: txns }))
+}

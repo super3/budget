@@ -18,6 +18,8 @@ import { Settings, type NotifPrefs } from './screens/Settings'
 import { Landing } from './screens/Landing'
 import { getClerk } from './clerk'
 import type { SidebarUser } from './components/Sidebar'
+import { api, type PlaidAccount, type PlaidTransaction } from './api'
+import { buildLiveSummary, mapAccountsToGroups, mapTransactionsToDays } from './plaidMapping'
 
 // The landing page is the homepage; the app lives at #app so direct links
 // work on GitHub Pages without any server-side routing. Other hashes
@@ -105,6 +107,37 @@ function AppShell({ onSignOut }: { onSignOut: () => void }) {
     }
   }, [])
 
+  // Live Plaid data for signed-in users with connected banks; demo data
+  // renders whenever this is empty (signed out, no connections, API down).
+  const [liveAccounts, setLiveAccounts] = useState<PlaidAccount[] | null>(null)
+  const [liveTxns, setLiveTxns] = useState<PlaidTransaction[] | null>(null)
+
+  const loadPlaidData = () => {
+    Promise.all([api.getBalances(), api.getTransactions()])
+      .then(([balances, transactions]) => {
+        setLiveAccounts(balances.accounts)
+        setLiveTxns(transactions.transactions)
+      })
+      .catch(() => {})
+  }
+
+  useEffect(() => {
+    if (clerkUser) loadPlaidData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clerkUser])
+
+  const onBankConnected = () => {
+    loadPlaidData()
+    // The initial transaction sync runs in the background on the server;
+    // pick up its results shortly after the connection completes.
+    setTimeout(loadPlaidData, 6000)
+  }
+
+  const liveGroups = liveAccounts && liveAccounts.length > 0 ? mapAccountsToGroups(liveAccounts) : null
+  const liveSummary = liveAccounts && liveAccounts.length > 0 ? buildLiveSummary(liveAccounts) : null
+  const liveDays = liveTxns && liveTxns.length > 0 ? mapTransactionsToDays(liveTxns) : null
+  const liveTxnCount = liveTxns?.length ?? 0
+
   const doRefresh = () => {
     if (refresh !== 'idle') return
     setRefresh('busy')
@@ -146,6 +179,8 @@ function AppShell({ onSignOut }: { onSignOut: () => void }) {
             onRefresh={doRefresh}
             onOpenAccount={openAccount}
             onAddAccount={() => setModal('addAccount')}
+            liveGroups={liveGroups}
+            liveSummary={liveSummary}
           />
         )}
 
@@ -164,6 +199,8 @@ function AppShell({ onSignOut }: { onSignOut: () => void }) {
             filters={txFilters}
             onFlipFilter={(key) => setTxFilters((s) => ({ ...s, [key]: !s[key] }))}
             onAddTransaction={() => setModal('addTransaction')}
+            liveDays={liveDays}
+            liveCount={liveTxnCount}
           />
         )}
 
@@ -178,7 +215,7 @@ function AppShell({ onSignOut }: { onSignOut: () => void }) {
         )}
       </div>
 
-      <ModalHost modal={modal} onClose={() => setModal(null)} />
+      <ModalHost modal={modal} onClose={() => setModal(null)} onBankConnected={onBankConnected} />
     </div>
   )
 }

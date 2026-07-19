@@ -2,6 +2,7 @@ import { ACCOUNT_GROUPS, MENUS, SUMMARY, type Account, type AccountGroup, type M
 import { SelectMenu } from '../components/menu'
 import { ACCOUNTS_CHART, AreaChart, Avatar, ChartYLabels, Sparkline } from '../components/primitives'
 import { GroupChevron } from '../components/icons'
+import type { LiveSummary } from '../plaidMapping'
 
 export type GroupId = AccountGroup['id']
 
@@ -18,6 +19,8 @@ interface AccountsProps {
   onRefresh: () => void
   onOpenAccount: (account: Account) => void
   onAddAccount: () => void
+  liveGroups?: AccountGroup[] | null
+  liveSummary?: LiveSummary | null
 }
 
 const Y_LABELS = [
@@ -106,8 +109,13 @@ export function Accounts({
   onRefresh,
   onOpenAccount,
   onAddAccount,
+  liveGroups,
+  liveSummary,
 }: AccountsProps) {
   const percentMode = summaryMode === 'percent'
+  const live = Boolean(liveGroups && liveGroups.length > 0)
+  const groups = live ? liveGroups! : ACCOUNT_GROUPS
+  const summary = liveSummary ?? SUMMARY
 
   return (
     <div className="screen">
@@ -129,12 +137,16 @@ export function Accounts({
               <div className="overline">Net worth</div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginTop: 6, flexWrap: 'wrap' }}>
                 <span className="num" style={{ fontSize: 32, fontWeight: 650, letterSpacing: '-0.02em' }}>
-                  $412,806.53
+                  {summary.netWorth}
                 </span>
-                <span className="num" style={{ fontSize: 15, fontWeight: 600, color: 'var(--positive)' }}>
-                  ↑ $6,214.30 (1.5%)
+                {!live && (
+                  <span className="num" style={{ fontSize: 15, fontWeight: 600, color: 'var(--positive)' }}>
+                    ↑ $6,214.30 (1.5%)
+                  </span>
+                )}
+                <span style={{ fontSize: 13.5, color: 'var(--faint)' }}>
+                  {live ? 'Live from Plaid Sandbox' : '1 month change'}
                 </span>
-                <span style={{ fontSize: 13.5, color: 'var(--faint)' }}>1 month change</span>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
@@ -154,7 +166,7 @@ export function Accounts({
 
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-start' }}>
           <div style={{ flex: '1 1 460px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {ACCOUNT_GROUPS.map((group) => (
+            {groups.map((group) => (
               <div key={group.id} className="card">
                 <div className="acct-group-header" onClick={() => onToggleGroup(group.id)}>
                   <GroupChevron open={openGroups[group.id]} />
@@ -196,8 +208,8 @@ export function Accounts({
             <div style={{ marginTop: 18 }}>
               <SummarySection
                 title="Assets"
-                total={SUMMARY.assets.total}
-                segments={SUMMARY.assets.segments}
+                total={summary.assets.total}
+                segments={summary.assets.segments}
                 percentMode={percentMode}
               />
             </div>
@@ -205,8 +217,8 @@ export function Accounts({
             <div style={{ borderTop: '1px solid var(--divider)', marginTop: 18, paddingTop: 16 }}>
               <SummarySection
                 title="Liabilities"
-                total={SUMMARY.liabilities.total}
-                segments={SUMMARY.liabilities.segments}
+                total={summary.liabilities.total}
+                segments={summary.liabilities.segments}
                 percentMode={percentMode}
               />
             </div>
@@ -223,7 +235,7 @@ export function Accounts({
             >
               <span style={{ fontSize: 15, fontWeight: 650 }}>Net worth</span>
               <span className="num" style={{ fontSize: 15.5, fontWeight: 650, color: 'var(--positive)' }}>
-                {SUMMARY.netWorth}
+                {summary.netWorth}
               </span>
             </div>
           </div>
