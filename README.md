@@ -2,6 +2,12 @@
 
 A personal budgeting app MVP — track net worth, accounts, and transactions in one place.
 
+[![Test Status](https://img.shields.io/github/actions/workflow/status/super3/alder/test.yml?branch=main&label=tests)](https://github.com/super3/alder/actions/workflows/test.yml)
+[![Site Status](https://img.shields.io/website?url=https%3A%2F%2Faldermoney.com&label=site&up_message=live&down_message=down)](https://aldermoney.com)
+[![API Status](https://img.shields.io/website?url=https%3A%2F%2Falder-production.up.railway.app%2Fhealth&label=api&up_message=live&down_message=down)](https://alder-production.up.railway.app/health)
+[![Coverage Status](https://coveralls.io/repos/github/super3/alder/badge.svg?branch=main)](https://coveralls.io/github/super3/alder?branch=main)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg?label=license)](https://github.com/super3/alder/blob/main/LICENSE)
+
 Built with React, TypeScript, and Vite from the Fern MVP design handoff
 (the product has since been renamed from Fern to Alder — aldermoney.com).
 
@@ -50,6 +56,39 @@ default: locally via `.env.local` (see `.env.example`), and in deploys via
 a repository **Actions variable** (Settings → Secrets and variables →
 Actions → Variables). Waitlist sign-up mode must be enabled in the Clerk
 dashboard (Configure → Restrictions).
+
+## Backend (Plaid API)
+
+`server/` is an Express API that connects real bank accounts through
+[Plaid](https://plaid.com/docs/) — Link token creation, public-token
+exchange, real-time balances (`/accounts/balance/get`), and cursor-based
+transaction sync (`/transactions/sync`) with a webhook receiver. Requests
+are authenticated with Clerk; data lives in Postgres with
+`node-pg-migrate` migrations that run automatically on `npm start`.
+
+```sh
+cd server
+npm install
+cp .env.example .env   # fill in Plaid + Clerk keys
+npm run dev
+```
+
+Sandbox smoke test (no UI, uses /sandbox/public_token/create):
+
+```sh
+cd server && npm run spike
+```
+
+Tests (Jest + supertest + pg-mem, 100% coverage enforced by the config —
+same setup as llmjob; also run in CI via `.github/workflows/test.yml`):
+
+```sh
+cd server && npm test
+```
+
+Deploys on Railway: create a service from this repo with **Root Directory
+`server`**, attach the Postgres database (`DATABASE_URL` via
+`${{Postgres.DATABASE_URL}}`), and set the variables from `.env.example`.
 
 ## Deployment
 
