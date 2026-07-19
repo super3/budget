@@ -2,6 +2,12 @@
 
 A personal budgeting app MVP — track net worth, accounts, and transactions in one place.
 
+[![Test Status](https://img.shields.io/github/actions/workflow/status/super3/alder/test.yml?branch=main&label=tests)](https://github.com/super3/alder/actions/workflows/test.yml)
+[![Site Status](https://img.shields.io/website?url=https%3A%2F%2Faldermoney.com&label=site&up_message=live&down_message=down)](https://aldermoney.com)
+[![API Status](https://img.shields.io/website?url=https%3A%2F%2Falder-production.up.railway.app%2Fhealth&label=api&up_message=live&down_message=down)](https://alder-production.up.railway.app/health)
+[![Coverage Status](https://coveralls.io/repos/github/super3/alder/badge.svg?branch=main)](https://coveralls.io/github/super3/alder?branch=main)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg?label=license)](https://github.com/super3/alder/blob/main/LICENSE)
+
 Built with React, TypeScript, and Vite from the Fern MVP design handoff
 (the product has since been renamed from Fern to Alder — aldermoney.com).
 
