@@ -205,10 +205,16 @@ function toDesignTransaction(txn: PlaidTransaction, sub: string): Transaction {
   }
 }
 
+// The API contract is YYYY-MM-DD, but be tolerant of full ISO timestamps
+// (Postgres DATE columns serialize that way if not normalized server-side).
+function dateOnly(value: string): string {
+  return value.slice(0, 10)
+}
+
 // Flat "Jul 12 · Category" list for the Dashboard and account-detail cards.
 export function mapTransactionsToRecent(transactions: PlaidTransaction[], limit = 5): Transaction[] {
   return transactions.slice(0, limit).map((txn) => {
-    const date = new Date(`${txn.date}T00:00:00`)
+    const date = new Date(`${dateOnly(txn.date)}T00:00:00`)
     const formatted = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     return toDesignTransaction(txn, `${formatted} · ${categoryFor(txn.personal_finance_category).name}`)
   })
@@ -274,9 +280,10 @@ export function mapTransactionsToDays(transactions: PlaidTransaction[]): Transac
   const byDate = new Map<string, Transaction[]>()
   for (const txn of transactions) {
     const mapped = toDesignTransaction(txn, txn.account_name || txn.institution_name || 'Connected account')
-    const list = byDate.get(txn.date) || []
+    const day = dateOnly(txn.date)
+    const list = byDate.get(day) || []
     list.push(mapped)
-    byDate.set(txn.date, list)
+    byDate.set(day, list)
   }
   return [...byDate.entries()]
     .sort(([a], [b]) => (a < b ? 1 : -1))
