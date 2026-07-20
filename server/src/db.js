@@ -163,6 +163,14 @@ async function getAccountsForUser(clerkUserId) {
   return rows
 }
 
+// pg returns DATE columns as JS Dates, which res.json would serialize as
+// full ISO timestamps; the API contract is a plain YYYY-MM-DD string.
+function toDateString(value) {
+  if (value == null) return null
+  if (value instanceof Date) return value.toISOString().slice(0, 10)
+  return String(value).slice(0, 10)
+}
+
 async function getTransactionsForUser(clerkUserId, limit = 100) {
   const { rows } = await pool.query(
     `SELECT t.*, a.name AS account_name, i.institution_name
@@ -174,7 +182,11 @@ async function getTransactionsForUser(clerkUserId, limit = 100) {
       LIMIT $2`,
     [clerkUserId, limit],
   )
-  return rows
+  return rows.map((row) => ({
+    ...row,
+    date: toDateString(row.date),
+    authorized_date: toDateString(row.authorized_date),
+  }))
 }
 
 module.exports = {
@@ -190,4 +202,5 @@ module.exports = {
   markTransactionRemoved,
   getAccountsForUser,
   getTransactionsForUser,
+  toDateString,
 }

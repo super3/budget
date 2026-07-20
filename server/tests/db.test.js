@@ -131,4 +131,26 @@ describe('transactions', () => {
     expect(txns).toHaveLength(1)
     expect(txns[0].transaction_id).toBe('txn_3')
   })
+
+  test('getTransactionsForUser returns dates as plain YYYY-MM-DD strings', async () => {
+    await db.upsertTransaction(
+      baseTxn({ transaction_id: 'txn_4', date: '2026-07-13', authorized_date: undefined }),
+    )
+    const txns = await db.getTransactionsForUser('user_1')
+    const txn4 = txns.find((t) => t.transaction_id === 'txn_4')
+    expect(txn4.date).toBe('2026-07-13')
+    expect(txn4.authorized_date).toBeNull()
+  })
+})
+
+describe('toDateString', () => {
+  test('serializes JS Dates (how pg returns DATE columns) to YYYY-MM-DD', () => {
+    expect(db.toDateString(new Date('2026-07-13T00:00:00Z'))).toBe('2026-07-13')
+  })
+
+  test('trims already-string dates and passes nulls through', () => {
+    expect(db.toDateString('2026-07-13')).toBe('2026-07-13')
+    expect(db.toDateString('2026-07-13T00:00:00.000Z')).toBe('2026-07-13')
+    expect(db.toDateString(null)).toBeNull()
+  })
 })
