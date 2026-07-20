@@ -1,5 +1,6 @@
-import { INSTITUTIONS, type SettingsSection } from '../data'
+import type { Institution, SettingsSection } from '../data'
 import { Avatar, Toggle } from '../components/primitives'
+import type { SidebarUser } from '../components/Sidebar'
 
 export interface NotifPrefs {
   weekly: boolean
@@ -13,7 +14,12 @@ interface SettingsProps {
   onSetSection: (section: SettingsSection) => void
   notif: NotifPrefs
   onFlipNotif: (key: keyof NotifPrefs) => void
-  onEditProfile: () => void
+  user: SidebarUser | null
+  institutions: Institution[] | null
+  onAddAccount: () => void
+  onManageAccount: () => void
+  onLogIn: () => void
+  onSignOut: () => void
 }
 
 const SECTIONS: { id: SettingsSection; label: string }[] = [
@@ -33,7 +39,18 @@ const NOTIF_ROWS: { key: keyof NotifPrefs; title: string; sub: string }[] = [
 const CONNECTED_PILL = { background: 'oklch(0.95 0.04 165)', color: 'oklch(0.4 0.09 165)' }
 const RECONNECT_PILL = { background: 'oklch(0.96 0.05 85)', color: 'oklch(0.5 0.11 70)' }
 
-export function Settings({ section, onSetSection, notif, onFlipNotif, onEditProfile }: SettingsProps) {
+export function Settings({
+  section,
+  onSetSection,
+  notif,
+  onFlipNotif,
+  user,
+  institutions,
+  onAddAccount,
+  onManageAccount,
+  onLogIn,
+  onSignOut,
+}: SettingsProps) {
   return (
     <div className="screen">
       <div className="screen-header">
@@ -67,14 +84,33 @@ export function Settings({ section, onSetSection, notif, onFlipNotif, onEditProf
                       borderTop: '1px solid var(--divider)',
                     }}
                   >
-                    <Avatar initials="AM" bg="oklch(0.85 0.05 165)" fg="oklch(0.35 0.08 165)" size={44} fontSize={15} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 15, fontWeight: 600 }}>Alex Morgan</div>
-                      <div style={{ fontSize: 13.5, color: 'var(--faint)' }}>alex@aldermoney.com</div>
-                    </div>
-                    <div className="btn-small" onClick={onEditProfile}>
-                      Edit profile
-                    </div>
+                    {user ? (
+                      <>
+                        <Avatar
+                          initials={user.initials}
+                          bg="oklch(0.85 0.05 165)"
+                          fg="oklch(0.35 0.08 165)"
+                          size={44}
+                          fontSize={15}
+                        />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 15, fontWeight: 600 }}>{user.name}</div>
+                          <div style={{ fontSize: 13.5, color: 'var(--faint)' }}>{user.email}</div>
+                        </div>
+                        <div className="btn-small" onClick={onManageAccount}>
+                          Manage
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div style={{ flex: 1, minWidth: 0, fontSize: 14.5, color: 'var(--muted)' }}>
+                          You're not logged in.
+                        </div>
+                        <div className="btn-small" onClick={onLogIn}>
+                          Log in
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -125,62 +161,96 @@ export function Settings({ section, onSetSection, notif, onFlipNotif, onEditProf
                   <div style={{ padding: '15px 20px', fontSize: 16.5, fontWeight: 650 }}>Security</div>
                   <div className="settings-row">
                     <div>
-                      <div className="settings-row-title">Password</div>
-                      <div className="settings-row-sub">Last changed 4 months ago</div>
+                      <div className="settings-row-title">Sign-in &amp; security</div>
+                      <div className="settings-row-sub">
+                        Password, email, and sessions are managed through your Clerk account
+                      </div>
                     </div>
-                    <div className="btn-small">Change</div>
+                    {user ? (
+                      <div className="btn-small" onClick={onManageAccount}>
+                        Manage
+                      </div>
+                    ) : (
+                      <div className="btn-small" onClick={onLogIn}>
+                        Log in
+                      </div>
+                    )}
                   </div>
                   <div className="settings-row">
                     <div>
-                      <div className="settings-row-title">Two-factor authentication</div>
-                      <div className="settings-row-sub">Authenticator app</div>
+                      <div className="settings-row-title">Bank connections</div>
+                      <div className="settings-row-sub">
+                        Read-only access through Plaid — Alder never sees your bank credentials
+                      </div>
                     </div>
-                    <span className="status-pill" style={CONNECTED_PILL}>
-                      Enabled
-                    </span>
-                  </div>
-                  <div className="settings-row">
-                    <div>
-                      <div className="settings-row-title">Active sessions</div>
-                      <div className="settings-row-sub">MacBook Pro · iPhone 15</div>
-                    </div>
-                    <div className="btn-small">Manage</div>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '2px 4px' }}>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--muted)', cursor: 'pointer' }}>Sign out</span>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: 'oklch(0.5 0.16 25)', cursor: 'pointer' }}>
-                    Delete account…
-                  </span>
-                </div>
+                {user && (
+                  <div style={{ padding: '2px 4px' }}>
+                    <span
+                      style={{ fontSize: 14, fontWeight: 600, color: 'var(--muted)', cursor: 'pointer' }}
+                      onClick={onSignOut}
+                    >
+                      Sign out
+                    </span>
+                  </div>
+                )}
               </>
             )}
 
             {section === 'connected' && (
               <div className="card">
-                <div style={{ padding: '15px 20px', fontSize: 16.5, fontWeight: 650 }}>Connected accounts</div>
-                {INSTITUTIONS.map((inst) => (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '15px 20px',
+                  }}
+                >
+                  <span style={{ fontSize: 16.5, fontWeight: 650 }}>Connected accounts</span>
+                  <div className="btn-small" onClick={onAddAccount}>
+                    + Add
+                  </div>
+                </div>
+                {institutions && institutions.length > 0 ? (
+                  institutions.map((inst) => (
+                    <div
+                      key={inst.name}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 13,
+                        padding: '13px 20px',
+                        borderTop: '1px solid var(--divider)',
+                      }}
+                    >
+                      <Avatar initials={inst.initials} bg={inst.avatarBg} fg={inst.avatarFg} size={36} fontSize={13} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 15, fontWeight: 600 }}>{inst.name}</div>
+                        <div style={{ fontSize: 13.5, color: 'var(--faint)' }}>{inst.sub}</div>
+                      </div>
+                      <span
+                        className="status-pill"
+                        style={inst.status === 'connected' ? CONNECTED_PILL : RECONNECT_PILL}
+                      >
+                        {inst.status === 'connected' ? 'Connected' : 'Reconnect'}
+                      </span>
+                    </div>
+                  ))
+                ) : (
                   <div
-                    key={inst.name}
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 13,
-                      padding: '13px 20px',
+                      padding: '18px 20px',
                       borderTop: '1px solid var(--divider)',
+                      fontSize: 14,
+                      color: 'var(--faint)',
                     }}
                   >
-                    <Avatar initials={inst.initials} bg={inst.avatarBg} fg={inst.avatarFg} size={36} fontSize={13} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 15, fontWeight: 600 }}>{inst.name}</div>
-                      <div style={{ fontSize: 13.5, color: 'var(--faint)' }}>{inst.sub}</div>
-                    </div>
-                    <span className="status-pill" style={inst.status === 'connected' ? CONNECTED_PILL : RECONNECT_PILL}>
-                      {inst.status === 'connected' ? 'Connected' : 'Reconnect'}
-                    </span>
+                    No banks connected yet — use “+ Add” to connect one through Plaid.
                   </div>
-                ))}
+                )}
               </div>
             )}
           </div>

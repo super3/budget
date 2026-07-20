@@ -1,8 +1,15 @@
-// Maps live Plaid API data into the shapes the design screens already
-// render (AccountGroup / TransactionDay / summary), so connected users see
-// real data in the exact same UI the demo uses.
+// Maps live Plaid API data into the shapes the design screens render
+// (AccountGroup / TransactionDay / summary / cash flow / institutions).
 import type { PlaidAccount, PlaidTransaction } from './api'
-import { CATEGORIES, type Account, type AccountGroup, type Category, type Transaction, type TransactionDay } from './data'
+import {
+  CATEGORIES,
+  type Account,
+  type AccountGroup,
+  type Category,
+  type Institution,
+  type Transaction,
+  type TransactionDay,
+} from './data'
 
 const AVATAR_PALETTE = [
   { bg: 'oklch(0.95 0.04 250)', fg: 'oklch(0.42 0.09 250)' },
@@ -181,23 +188,92 @@ function dayLabel(dateStr: string): string {
   return formatted
 }
 
+function toDesignTransaction(txn: PlaidTransaction, sub: string): Transaction {
+  const amount = typeof txn.amount === 'string' ? parseFloat(txn.amount) : txn.amount
+  const positive = amount < 0 // Plaid: positive = money out
+  const merchant = txn.merchant_name || txn.name
+  const { bg, fg } = avatarFor(merchant)
+  return {
+    merchant: merchant + (txn.pending ? ' (pending)' : ''),
+    sub,
+    category: categoryFor(txn.personal_finance_category),
+    amount: `${positive ? '+' : '−'}${formatMoney(Math.abs(amount), txn.iso_currency_code).replace('-', '')}`,
+    positive,
+    initials: initialsOf(merchant),
+    avatarBg: bg,
+    avatarFg: fg,
+  }
+}
+
+// Flat "Jul 12 · Category" list for the Dashboard and account-detail cards.
+export function mapTransactionsToRecent(transactions: PlaidTransaction[], limit = 5): Transaction[] {
+  return transactions.slice(0, limit).map((txn) => {
+    const date = new Date(`${txn.date}T00:00:00`)
+    const formatted = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    return toDesignTransaction(txn, `${formatted} · ${categoryFor(txn.personal_finance_category).name}`)
+  })
+}
+
+export interface CashFlow {
+  month: string
+  income: string
+  spending: string
+  net: string
+  netPositive: boolean
+  incomeWidth: string
+  spendingWidth: string
+}
+
+// Income vs. spending for the current calendar month (transfers excluded).
+export function buildCashFlow(transactions: PlaidTransaction[]): CashFlow {
+  const now = new Date()
+  const prefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  let income = 0
+  let spending = 0
+  for (const txn of transactions) {
+    if (!txn.date.startsWith(prefix)) continue
+    const pfc = txn.personal_finance_category || ''
+    if (pfc.startsWith('TRANSFER')) continue
+    const amount = typeof txn.amount === 'string' ? parseFloat(txn.amount) : txn.amount
+    if (amount < 0) income += -amount
+    else spending += amount
+  }
+  const max = Math.max(income, spending)
+  const net = income - spending
+  return {
+    month: now.toLocaleDateString('en-US', { month: 'long' }),
+    income: formatMoney(income),
+    spending: formatMoney(spending),
+    net: `${net >= 0 ? '+' : '−'}${formatMoney(Math.abs(net))}`,
+    netPositive: net >= 0,
+    incomeWidth: max > 0 ? `${Math.round((income / max) * 100)}%` : '0%',
+    spendingWidth: max > 0 ? `${Math.round((spending / max) * 100)}%` : '0%',
+  }
+}
+
+export function mapAccountsToInstitutions(accounts: PlaidAccount[]): Institution[] {
+  const counts = new Map<string, number>()
+  for (const account of accounts) {
+    const name = account.institution_name || 'Connected bank'
+    counts.set(name, (counts.get(name) || 0) + 1)
+  }
+  return [...counts.entries()].map(([name, count]) => {
+    const { bg, fg } = avatarFor(name)
+    return {
+      name,
+      sub: `${count} account${count === 1 ? '' : 's'} · Plaid`,
+      initials: initialsOf(name),
+      avatarBg: bg,
+      avatarFg: fg,
+      status: 'connected' as const,
+    }
+  })
+}
+
 export function mapTransactionsToDays(transactions: PlaidTransaction[]): TransactionDay[] {
   const byDate = new Map<string, Transaction[]>()
   for (const txn of transactions) {
-    const amount = typeof txn.amount === 'string' ? parseFloat(txn.amount) : txn.amount
-    const positive = amount < 0 // Plaid: positive = money out
-    const merchant = txn.merchant_name || txn.name
-    const { bg, fg } = avatarFor(merchant)
-    const mapped: Transaction = {
-      merchant: merchant + (txn.pending ? ' (pending)' : ''),
-      sub: txn.account_name || txn.institution_name || 'Connected account',
-      category: categoryFor(txn.personal_finance_category),
-      amount: `${positive ? '+' : '−'}${formatMoney(Math.abs(amount), txn.iso_currency_code).replace('-', '')}`,
-      positive,
-      initials: initialsOf(merchant),
-      avatarBg: bg,
-      avatarFg: fg,
-    }
+    const mapped = toDesignTransaction(txn, txn.account_name || txn.institution_name || 'Connected account')
     const list = byDate.get(txn.date) || []
     list.push(mapped)
     byDate.set(txn.date, list)

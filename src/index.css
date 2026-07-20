@@ -289,6 +289,48 @@ a:hover {
   box-shadow: var(--card-shadow);
 }
 
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 56px 24px;
+}
+
+.empty-state-mark {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.empty-state-title {
+  font-size: 17px;
+  font-weight: 650;
+}
+
+.empty-state-sub {
+  font-size: 14.5px;
+  color: var(--muted);
+  margin-top: 6px;
+  max-width: 420px;
+  line-height: 1.55;
+}
+
+.chart-placeholder {
+  border: 1.5px dashed var(--divider);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fainter);
+  font-size: 13.5px;
+}
+
 .card-header {
   display: flex;
   align-items: center;

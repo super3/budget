@@ -1,0 +1,14 @@
+# Railway config for the API service (config-as-code, llmjob-style: no
+# dashboard settings needed). The repo root is the Vite frontend, which
+# deploys to GitHub Pages — so build and start are pointed into server/,
+# making the "Root Directory" service setting unnecessary.
+[build]
+builder = "NIXPACKS"
+buildCommand = "cd server && npm ci"
+
+[deploy]
+startCommand = "cd server && npm start"
+healthcheckPath = "/health"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

@@ -1,6 +1,6 @@
-import { ACCOUNT_GROUPS, MENUS, SUMMARY, type Account, type AccountGroup, type MenuKey } from '../data'
-import { SelectMenu } from '../components/menu'
-import { ACCOUNTS_CHART, AreaChart, Avatar, ChartYLabels, Sparkline } from '../components/primitives'
+import type { Account, AccountGroup } from '../data'
+import { Avatar, Sparkline } from '../components/primitives'
+import { EmptyState } from '../components/EmptyState'
 import { GroupChevron } from '../components/icons'
 import type { LiveSummary } from '../plaidMapping'
 
@@ -9,8 +9,6 @@ export type GroupId = AccountGroup['id']
 export type RefreshState = 'idle' | 'busy' | 'done'
 
 interface AccountsProps {
-  menuSel: Record<MenuKey, number>
-  onMenuSelect: (key: MenuKey, index: number) => void
   openGroups: Record<GroupId, boolean>
   onToggleGroup: (id: GroupId) => void
   summaryMode: 'totals' | 'percent'
@@ -19,16 +17,9 @@ interface AccountsProps {
   onRefresh: () => void
   onOpenAccount: (account: Account) => void
   onAddAccount: () => void
-  liveGroups?: AccountGroup[] | null
-  liveSummary?: LiveSummary | null
+  groups: AccountGroup[] | null
+  summary: LiveSummary | null
 }
-
-const Y_LABELS = [
-  { text: '$414K', top: 6 },
-  { text: '$409K', top: 56 },
-  { text: '$404K', top: 106 },
-  { text: '$399K', top: 156 },
-]
 
 const REFRESH_LABELS: Record<RefreshState, string> = {
   idle: 'Refresh all',
@@ -99,8 +90,6 @@ function SummarySection({ title, total, segments, percentMode }: SummarySectionP
 }
 
 export function Accounts({
-  menuSel,
-  onMenuSelect,
   openGroups,
   onToggleGroup,
   summaryMode,
@@ -109,137 +98,130 @@ export function Accounts({
   onRefresh,
   onOpenAccount,
   onAddAccount,
-  liveGroups,
-  liveSummary,
+  groups,
+  summary,
 }: AccountsProps) {
   const percentMode = summaryMode === 'percent'
-  const live = Boolean(liveGroups && liveGroups.length > 0)
-  const groups = live ? liveGroups! : ACCOUNT_GROUPS
-  const summary = liveSummary ?? SUMMARY
+  const connected = Boolean(groups && groups.length > 0)
 
   return (
     <div className="screen">
       <div className="screen-header">
         <span className="screen-title">Accounts</span>
         <div className="screen-actions">
-          <div className="btn" onClick={onRefresh}>
-            ↻ <span>{REFRESH_LABELS[refresh]}</span>
-          </div>
+          {connected && (
+            <div className="btn" onClick={onRefresh}>
+              ↻ <span>{REFRESH_LABELS[refresh]}</span>
+            </div>
+          )}
           <div className="btn-primary" onClick={onAddAccount}>
             + <span>Add account</span>
           </div>
         </div>
       </div>
       <div className="screen-body">
-        <div className="card" style={{ padding: '22px 26px', marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16 }}>
-            <div>
-              <div className="overline">Net worth</div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginTop: 6, flexWrap: 'wrap' }}>
-                <span className="num" style={{ fontSize: 32, fontWeight: 650, letterSpacing: '-0.02em' }}>
-                  {summary.netWorth}
-                </span>
-                {!live && (
-                  <span className="num" style={{ fontSize: 15, fontWeight: 600, color: 'var(--positive)' }}>
-                    ↑ $6,214.30 (1.5%)
+        {!connected || !summary ? (
+          <EmptyState
+            title="No accounts connected yet"
+            sub="Connect a bank to see balances, account groups, and your asset and liability breakdown. Log in first if you haven't."
+            actionLabel="+ Add account"
+            onAction={onAddAccount}
+          />
+        ) : (
+          <>
+            <div className="card" style={{ padding: '22px 26px', marginBottom: 16 }}>
+              <div>
+                <div className="overline">Net worth</div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginTop: 6, flexWrap: 'wrap' }}>
+                  <span className="num" style={{ fontSize: 32, fontWeight: 650, letterSpacing: '-0.02em' }}>
+                    {summary.netWorth}
                   </span>
-                )}
-                <span style={{ fontSize: 13.5, color: 'var(--faint)' }}>
-                  {live ? 'Live from Plaid Sandbox' : '1 month change'}
-                </span>
-              </div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-              <SelectMenu
-                id="acctRange"
-                options={MENUS.acctRange}
-                selected={menuSel.acctRange}
-                onSelect={(i) => onMenuSelect('acctRange', i)}
-              />
-            </div>
-          </div>
-          <div style={{ position: 'relative', marginTop: 16 }}>
-            <ChartYLabels labels={Y_LABELS} />
-            <AreaChart spec={ACCOUNTS_CHART} gradientId="nwfill2" style={{ marginLeft: 56 }} />
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-start' }}>
-          <div style={{ flex: '1 1 460px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {groups.map((group) => (
-              <div key={group.id} className="card">
-                <div className="acct-group-header" onClick={() => onToggleGroup(group.id)}>
-                  <GroupChevron open={openGroups[group.id]} />
-                  <span className="acct-group-title">{group.label}</span>
-                  {group.change && <span className="acct-group-change">{group.change}</span>}
-                  <span className="acct-group-note">{group.changeNote}</span>
-                  <span className="acct-group-total">{group.total}</span>
+                  <span style={{ fontSize: 13.5, color: 'var(--faint)' }}>Live from your connected banks</span>
                 </div>
-                {openGroups[group.id] &&
-                  group.accounts.map((account) => (
-                    <AccountRow key={account.id} account={account} onOpen={() => onOpenAccount(account)} />
-                  ))}
               </div>
-            ))}
-          </div>
-
-          <div
-            className="card"
-            style={{ flex: '1 1 260px', maxWidth: 360, minWidth: 250, padding: '18px 20px' }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span className="card-title">Summary</span>
-              <div className="seg">
-                <span
-                  className={`seg-item${percentMode ? '' : ' active'}`}
-                  onClick={() => onSetSummaryMode('totals')}
-                >
-                  Totals
-                </span>
-                <span
-                  className={`seg-item${percentMode ? ' active' : ''}`}
-                  onClick={() => onSetSummaryMode('percent')}
-                >
-                  Percent
-                </span>
+              <div className="chart-placeholder" style={{ height: 140, marginTop: 16 }}>
+                Net worth history will build up as your balances sync.
               </div>
             </div>
 
-            <div style={{ marginTop: 18 }}>
-              <SummarySection
-                title="Assets"
-                total={summary.assets.total}
-                segments={summary.assets.segments}
-                percentMode={percentMode}
-              />
-            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-start' }}>
+              <div style={{ flex: '1 1 460px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {groups!.map((group) => (
+                  <div key={group.id} className="card">
+                    <div className="acct-group-header" onClick={() => onToggleGroup(group.id)}>
+                      <GroupChevron open={openGroups[group.id]} />
+                      <span className="acct-group-title">{group.label}</span>
+                      {group.change && <span className="acct-group-change">{group.change}</span>}
+                      <span className="acct-group-note">{group.changeNote}</span>
+                      <span className="acct-group-total">{group.total}</span>
+                    </div>
+                    {openGroups[group.id] &&
+                      group.accounts.map((account) => (
+                        <AccountRow key={account.id} account={account} onOpen={() => onOpenAccount(account)} />
+                      ))}
+                  </div>
+                ))}
+              </div>
 
-            <div style={{ borderTop: '1px solid var(--divider)', marginTop: 18, paddingTop: 16 }}>
-              <SummarySection
-                title="Liabilities"
-                total={summary.liabilities.total}
-                segments={summary.liabilities.segments}
-                percentMode={percentMode}
-              />
-            </div>
+              <div
+                className="card"
+                style={{ flex: '1 1 260px', maxWidth: 360, minWidth: 250, padding: '18px 20px' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span className="card-title">Summary</span>
+                  <div className="seg">
+                    <span
+                      className={`seg-item${percentMode ? '' : ' active'}`}
+                      onClick={() => onSetSummaryMode('totals')}
+                    >
+                      Totals
+                    </span>
+                    <span
+                      className={`seg-item${percentMode ? ' active' : ''}`}
+                      onClick={() => onSetSummaryMode('percent')}
+                    >
+                      Percent
+                    </span>
+                  </div>
+                </div>
 
-            <div
-              style={{
-                borderTop: '1px solid var(--divider)',
-                marginTop: 18,
-                paddingTop: 16,
-                display: 'flex',
-                alignItems: 'baseline',
-                justifyContent: 'space-between',
-              }}
-            >
-              <span style={{ fontSize: 15, fontWeight: 650 }}>Net worth</span>
-              <span className="num" style={{ fontSize: 15.5, fontWeight: 650, color: 'var(--positive)' }}>
-                {summary.netWorth}
-              </span>
+                <div style={{ marginTop: 18 }}>
+                  <SummarySection
+                    title="Assets"
+                    total={summary.assets.total}
+                    segments={summary.assets.segments}
+                    percentMode={percentMode}
+                  />
+                </div>
+
+                <div style={{ borderTop: '1px solid var(--divider)', marginTop: 18, paddingTop: 16 }}>
+                  <SummarySection
+                    title="Liabilities"
+                    total={summary.liabilities.total}
+                    segments={summary.liabilities.segments}
+                    percentMode={percentMode}
+                  />
+                </div>
+
+                <div
+                  style={{
+                    borderTop: '1px solid var(--divider)',
+                    marginTop: 18,
+                    paddingTop: 16,
+                    display: 'flex',
+                    alignItems: 'baseline',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <span style={{ fontSize: 15, fontWeight: 650 }}>Net worth</span>
+                  <span className="num" style={{ fontSize: 15.5, fontWeight: 650, color: 'var(--positive)' }}>
+                    {summary.netWorth}
+                  </span>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </div>
   )

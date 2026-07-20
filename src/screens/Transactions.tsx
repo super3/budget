@@ -1,7 +1,8 @@
-import { MENUS, TRANSACTION_DAYS, type MenuKey, type Transaction, type TransactionDay } from '../data'
+import { MENUS, type MenuKey, type Transaction, type TransactionDay } from '../data'
 import { Menu, MenuCheckItem, MenuOption } from '../components/menu'
 import { Avatar } from '../components/primitives'
-import { CalendarIcon, FilterIcon, SidebarRightIcon } from '../components/icons'
+import { EmptyState } from '../components/EmptyState'
+import { CalendarIcon, FilterIcon } from '../components/icons'
 
 export interface TxFilters {
   pending: boolean
@@ -14,9 +15,9 @@ interface TransactionsProps {
   onMenuSelect: (key: MenuKey, index: number) => void
   filters: TxFilters
   onFlipFilter: (key: keyof TxFilters) => void
-  onAddTransaction: () => void
-  liveDays?: TransactionDay[] | null
-  liveCount?: number
+  onAddAccount: () => void
+  days: TransactionDay[] | null
+  count: number
 }
 
 function TransactionListRow({ transaction: t }: { transaction: Transaction }) {
@@ -42,81 +43,78 @@ export function Transactions({
   onMenuSelect,
   filters,
   onFlipFilter,
-  onAddTransaction,
-  liveDays,
-  liveCount = 0,
+  onAddAccount,
+  days,
+  count,
 }: TransactionsProps) {
-  const live = Boolean(liveDays && liveDays.length > 0)
-  const days = live ? liveDays! : TRANSACTION_DAYS
+  const connected = Boolean(days && days.length > 0)
   return (
     <div className="screen">
       <div className="screen-header">
         <span className="screen-title">Transactions</span>
-        <div className="screen-actions">
-          <Menu
-            id="txDate"
-            trigger={
-              <div className="btn-toolbar">
-                <CalendarIcon />
-                <span>{MENUS.txDate[menuSel.txDate]}</span>
-              </div>
-            }
-          >
-            {MENUS.txDate.map((opt, i) => (
-              <MenuOption key={opt} label={opt} onSelect={() => onMenuSelect('txDate', i)} />
-            ))}
-          </Menu>
-          <Menu
-            id="txFilters"
-            trigger={
-              <div className="btn-toolbar">
-                <FilterIcon />
-                <span>Filters</span>
-              </div>
-            }
-          >
-            <MenuCheckItem label="Pending only" checked={filters.pending} onToggle={() => onFlipFilter('pending')} />
-            <MenuCheckItem label="Income only" checked={filters.income} onToggle={() => onFlipFilter('income')} />
-            <MenuCheckItem
-              label="Include transfers"
-              checked={filters.transfers}
-              onToggle={() => onFlipFilter('transfers')}
-            />
-          </Menu>
-          <div className="toolbar-divider" />
-          <div className="btn-primary" onClick={onAddTransaction}>
-            + <span>Add</span>
+        {connected && (
+          <div className="screen-actions">
+            <Menu
+              id="txDate"
+              trigger={
+                <div className="btn-toolbar">
+                  <CalendarIcon />
+                  <span>{MENUS.txDate[menuSel.txDate]}</span>
+                </div>
+              }
+            >
+              {MENUS.txDate.map((opt, i) => (
+                <MenuOption key={opt} label={opt} onSelect={() => onMenuSelect('txDate', i)} />
+              ))}
+            </Menu>
+            <Menu
+              id="txFilters"
+              trigger={
+                <div className="btn-toolbar">
+                  <FilterIcon />
+                  <span>Filters</span>
+                </div>
+              }
+            >
+              <MenuCheckItem label="Pending only" checked={filters.pending} onToggle={() => onFlipFilter('pending')} />
+              <MenuCheckItem label="Income only" checked={filters.income} onToggle={() => onFlipFilter('income')} />
+              <MenuCheckItem
+                label="Include transfers"
+                checked={filters.transfers}
+                onToggle={() => onFlipFilter('transfers')}
+              />
+            </Menu>
           </div>
-          <div className="icon-btn">
-            <SidebarRightIcon />
-          </div>
-        </div>
+        )}
       </div>
       <div className="screen-body">
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
-          <span className="num" style={{ fontSize: 14, color: 'var(--muted)' }}>
-            {live ? (
-              <>
-                {liveCount} transactions · <b style={{ color: 'var(--ink)', fontWeight: 600 }}>Plaid Sandbox</b>
-              </>
-            ) : (
-              <>
-                42 transactions this month · <b style={{ color: 'var(--ink)', fontWeight: 600 }}>−$5,032.66</b>
-              </>
-            )}
-          </span>
-        </div>
+        {!connected ? (
+          <EmptyState
+            title="No transactions yet"
+            sub="Transactions sync automatically once you connect a bank from the Accounts screen."
+            actionLabel="+ Add account"
+            onAction={onAddAccount}
+          />
+        ) : (
+          <>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+              <span className="num" style={{ fontSize: 14, color: 'var(--muted)' }}>
+                {count} transactions synced
+              </span>
+            </div>
 
-        <div className="card" style={{ overflow: 'hidden' }}>
-          {days.map((day) => (
-            <div key={day.label}>
-              <div className="day-header">{day.label}</div>
-              {day.transactions.map((t) => (
-                <TransactionListRow key={t.merchant + t.amount} transaction={t} />
+            <div className="card" style={{ overflow: 'hidden' }}>
+              {days!.map((day) => (
+                <div key={day.label}>
+                  <div className="day-header">{day.label}</div>
+                  {day.transactions.map((t) => (
+                    <TransactionListRow key={t.merchant + t.amount + t.sub} transaction={t} />
+                  ))}
+                </div>
               ))}
             </div>
-          ))}
-        </div>
+          </>
+        )}
       </div>
     </div>
   )

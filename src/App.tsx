@@ -1,12 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import {
-  DEFAULT_ACCOUNT,
-  type Account,
-  type MenuKey,
-  type ModalKind,
-  type Screen,
-  type SettingsSection,
-} from './data'
+import type { Account, MenuKey, ModalKind, Screen, SettingsSection } from './data'
 import { MenuProvider } from './components/menu'
 import { Sidebar } from './components/Sidebar'
 import { ModalHost } from './components/Modals'
@@ -19,7 +12,14 @@ import { Landing } from './screens/Landing'
 import { getClerk } from './clerk'
 import type { SidebarUser } from './components/Sidebar'
 import { api, type PlaidAccount, type PlaidTransaction } from './api'
-import { buildLiveSummary, mapAccountsToGroups, mapTransactionsToDays } from './plaidMapping'
+import {
+  buildCashFlow,
+  buildLiveSummary,
+  mapAccountsToGroups,
+  mapAccountsToInstitutions,
+  mapTransactionsToDays,
+  mapTransactionsToRecent,
+} from './plaidMapping'
 
 // The landing page is the homepage; the app lives at #app so direct links
 // work on GitHub Pages without any server-side routing. Other hashes
@@ -67,10 +67,10 @@ function initialsOf(name: string): string {
 
 function AppShell({ onSignOut }: { onSignOut: () => void }) {
   const [screen, setScreen] = useState<Screen>('dashboard')
-  const [selectedAccount, setSelectedAccount] = useState<Account>(DEFAULT_ACCOUNT)
+  const [selectedAccount, setSelectedAccount] = useState<Account | null>(null)
   const [modal, setModal] = useState<ModalKind | null>(null)
 
-  const [menuSel, setMenuSel] = useState<Record<MenuKey, number>>({ nwPerf: 0, nwRange: 0, acctRange: 0, txDate: 0 })
+  const [menuSel, setMenuSel] = useState<Record<MenuKey, number>>({ txDate: 0 })
   const [dashCards, setDashCards] = useState<DashCards>({ networth: true, recent: true, cashflow: true })
   const [txFilters, setTxFilters] = useState<TxFilters>({ pending: false, income: false, transfers: true })
   const [summaryMode, setSummaryMode] = useState<'totals' | 'percent'>('totals')
@@ -88,8 +88,7 @@ function AppShell({ onSignOut }: { onSignOut: () => void }) {
   const refreshTimers = useRef<ReturnType<typeof setTimeout>[]>([])
   useEffect(() => () => refreshTimers.current.forEach(clearTimeout), [])
 
-  // Show the signed-in Clerk user in the sidebar when there is one; the demo
-  // persona stays in place for signed-out visitors (or if Clerk isn't set up).
+  // The signed-in Clerk user drives the sidebar and Settings profile.
   const [clerkUser, setClerkUser] = useState<SidebarUser | null>(null)
   useEffect(() => {
     let cancelled = false
@@ -107,8 +106,20 @@ function AppShell({ onSignOut }: { onSignOut: () => void }) {
     }
   }, [])
 
-  // Live Plaid data for signed-in users with connected banks; demo data
-  // renders whenever this is empty (signed out, no connections, API down).
+  const logIn = () => {
+    getClerk()
+      .then((clerk) => clerk.openSignIn?.({ afterSignInUrl: '/#app', afterSignUpUrl: '/#app' }))
+      .catch(() => {})
+  }
+
+  const manageAccount = () => {
+    getClerk()
+      .then((clerk) => clerk.openUserProfile?.())
+      .catch(() => {})
+  }
+
+  // Live Plaid data. Every screen renders from this; empty states show
+  // whenever it's absent (signed out, no connections, API unreachable).
   const [liveAccounts, setLiveAccounts] = useState<PlaidAccount[] | null>(null)
   const [liveTxns, setLiveTxns] = useState<PlaidTransaction[] | null>(null)
 
@@ -133,16 +144,35 @@ function AppShell({ onSignOut }: { onSignOut: () => void }) {
     setTimeout(loadPlaidData, 6000)
   }
 
-  const liveGroups = liveAccounts && liveAccounts.length > 0 ? mapAccountsToGroups(liveAccounts) : null
-  const liveSummary = liveAccounts && liveAccounts.length > 0 ? buildLiveSummary(liveAccounts) : null
-  const liveDays = liveTxns && liveTxns.length > 0 ? mapTransactionsToDays(liveTxns) : null
-  const liveTxnCount = liveTxns?.length ?? 0
+  const hasAccounts = Boolean(liveAccounts && liveAccounts.length > 0)
+  const groups = hasAccounts ? mapAccountsToGroups(liveAccounts!) : null
+  const summary = hasAccounts ? buildLiveSummary(liveAccounts!) : null
+  const institutions = hasAccounts ? mapAccountsToInstitutions(liveAccounts!) : null
+  const days = liveTxns && liveTxns.length > 0 ? mapTransactionsToDays(liveTxns) : null
+  const recent = liveTxns && liveTxns.length > 0 ? mapTransactionsToRecent(liveTxns, 5) : null
+  const cashFlow = liveTxns && liveTxns.length > 0 ? buildCashFlow(liveTxns) : null
+  const txnCount = liveTxns?.length ?? 0
 
+  const accountActivity =
+    selectedAccount && liveTxns
+      ? mapTransactionsToRecent(
+          liveTxns.filter((txn) => txn.account_id === selectedAccount.id),
+          8,
+        )
+      : []
+
+  // "Refresh all" asks the server to re-sync with Plaid, then reloads.
   const doRefresh = () => {
     if (refresh !== 'idle') return
     setRefresh('busy')
-    refreshTimers.current.push(setTimeout(() => setRefresh('done'), 900))
-    refreshTimers.current.push(setTimeout(() => setRefresh('idle'), 3200))
+    api
+      .syncTransactions()
+      .catch(() => {})
+      .then(() => {
+        loadPlaidData()
+        setRefresh('done')
+        refreshTimers.current.push(setTimeout(() => setRefresh('idle'), 2500))
+      })
   }
 
   const selectMenu = (key: MenuKey, index: number) => setMenuSel((s) => ({ ...s, [key]: index }))
@@ -154,23 +184,23 @@ function AppShell({ onSignOut }: { onSignOut: () => void }) {
 
   return (
     <div className="app">
-      <Sidebar screen={screen} onNavigate={setScreen} onSignOut={onSignOut} user={clerkUser} />
+      <Sidebar screen={screen} onNavigate={setScreen} onSignOut={onSignOut} onLogIn={logIn} user={clerkUser} />
 
       <div className="main">
         {screen === 'dashboard' && (
           <Dashboard
-            menuSel={menuSel}
-            onMenuSelect={selectMenu}
             cards={dashCards}
             onFlipCard={(key) => setDashCards((s) => ({ ...s, [key]: !s[key] }))}
             onViewTransactions={() => setScreen('transactions')}
+            netWorth={summary?.netWorth ?? null}
+            recent={recent}
+            cashFlow={cashFlow}
+            onAddAccount={() => setModal('addAccount')}
           />
         )}
 
         {screen === 'accounts' && (
           <Accounts
-            menuSel={menuSel}
-            onMenuSelect={selectMenu}
             openGroups={openGroups}
             onToggleGroup={(id) => setOpenGroups((s) => ({ ...s, [id]: !s[id] }))}
             summaryMode={summaryMode}
@@ -179,14 +209,15 @@ function AppShell({ onSignOut }: { onSignOut: () => void }) {
             onRefresh={doRefresh}
             onOpenAccount={openAccount}
             onAddAccount={() => setModal('addAccount')}
-            liveGroups={liveGroups}
-            liveSummary={liveSummary}
+            groups={groups}
+            summary={summary}
           />
         )}
 
-        {screen === 'accountDetail' && (
+        {screen === 'accountDetail' && selectedAccount && (
           <AccountDetail
             account={selectedAccount}
+            activity={accountActivity}
             onBack={() => setScreen('accounts')}
             onViewTransactions={() => setScreen('transactions')}
           />
@@ -198,9 +229,9 @@ function AppShell({ onSignOut }: { onSignOut: () => void }) {
             onMenuSelect={selectMenu}
             filters={txFilters}
             onFlipFilter={(key) => setTxFilters((s) => ({ ...s, [key]: !s[key] }))}
-            onAddTransaction={() => setModal('addTransaction')}
-            liveDays={liveDays}
-            liveCount={liveTxnCount}
+            onAddAccount={() => setModal('addAccount')}
+            days={days}
+            count={txnCount}
           />
         )}
 
@@ -210,7 +241,12 @@ function AppShell({ onSignOut }: { onSignOut: () => void }) {
             onSetSection={setSettingsSection}
             notif={notif}
             onFlipNotif={(key) => setNotif((s) => ({ ...s, [key]: !s[key] }))}
-            onEditProfile={() => setModal('editProfile')}
+            user={clerkUser}
+            institutions={institutions}
+            onAddAccount={() => setModal('addAccount')}
+            onManageAccount={manageAccount}
+            onLogIn={logIn}
+            onSignOut={onSignOut}
           />
         )}
       </div>

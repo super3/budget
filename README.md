@@ -14,18 +14,21 @@ Built with React, TypeScript, and Vite from the Fern MVP design handoff
 ## Pages
 
 The landing page is the homepage; the app lives at `#app` (hash-based, so
-direct links work on GitHub Pages without server-side routing). "See the
-demo" opens the app; "Sign out" returns to the landing page.
+direct links work on GitHub Pages without server-side routing). "Sign out"
+returns to the landing page.
 
 - **Landing** — hero with waitlist signup, product preview, stats strip, feature rows, CTA, and footer
 
 ## App screens
 
-- **Dashboard** — net worth chart, recent transactions, and monthly cash flow, with a Customize menu to show/hide each card
-- **Accounts** — net worth history plus collapsible account groups (cash, credit cards, investments, property, loans) and an asset/liability summary with totals or percent view
-- **Account detail** — balance history and recent activity for a single account
+All screens render live data from your connected banks; until a bank is
+connected they show empty states that prompt you to connect one.
+
+- **Dashboard** — net worth, recent transactions, and monthly cash flow, with a Customize menu to show/hide each card
+- **Accounts** — collapsible account groups (cash, credit cards, investments, property, loans) and an asset/liability summary with totals or percent view
+- **Account detail** — balance and recent activity for a single account
 - **Transactions** — day-grouped transaction list with category tags, date-range and filter menus
-- **Settings** — profile, preferences, notification toggles, security, and connected institutions
+- **Settings** — Clerk profile, preferences, notification toggles, security, and connected institutions
 
 ## Development
 
@@ -46,8 +49,9 @@ npm run preview  # serve the production build
 
 The landing-page waitlist forms submit to [Clerk](https://clerk.com)'s
 waitlist (`clerk.joinWaitlist`), the nav "Log in" opens Clerk's sign-in
-modal, and a signed-in user's name/email replace the demo persona in the
-app sidebar (Sign out ends the Clerk session). Setup:
+modal, and the signed-in user's name/email appear in the app sidebar and
+Settings (Sign out ends the Clerk session; "Manage" in Settings opens
+Clerk's account modal). Setup:
 
 The publishable key is hardcoded in `src/clerk.ts` (publishable keys are
 public by design). To use a different Clerk instance — e.g. a production
@@ -63,11 +67,12 @@ Signed-in users can connect banks from **Accounts → Add account →
 "Connect a bank with Plaid"**, which opens Plaid Link against the API.
 In Sandbox, pick any institution and sign in with `user_good` /
 `pass_good` (or `user_transactions_dynamic` for constantly-changing
-transactions). Once connected, the Accounts and Transactions screens
-show live balances, the computed net worth summary, and synced
-transactions; the demo data renders for signed-out visitors or when no
-banks are connected. The frontend reads the API base URL from
-`VITE_API_URL` (defaults to the Railway service URL).
+transactions). Once connected, every screen shows live balances, the
+computed net worth summary and cash flow, and synced transactions;
+"Refresh all" on the Accounts screen triggers a server-side re-sync.
+There is no demo data — before a bank is connected the screens show
+empty states. The frontend reads the API base URL from `VITE_API_URL`
+(defaults to the Railway service URL).
 
 ## Backend (Plaid API)
 
@@ -98,9 +103,12 @@ same setup as llmjob; also run in CI via `.github/workflows/test.yml`):
 cd server && npm test
 ```
 
-Deploys on Railway: create a service from this repo with **Root Directory
-`server`**, attach the Postgres database (`DATABASE_URL` via
-`${{Postgres.DATABASE_URL}}`), and set the variables from `.env.example`.
+Deploys on Railway with no dashboard configuration: the root
+`railway.toml` points the build (`cd server && npm ci`) and start
+(`cd server && npm start`) into `server/`, so the service can be created
+straight from the repo — no Root Directory setting needed. Attach the
+Postgres database (`DATABASE_URL` via `${{Postgres.DATABASE_URL}}`) and
+set the variables from `server/.env.example`.
 
 ## Deployment
 
@@ -122,9 +130,11 @@ add `main` to its allowed deployment branches.
 
 ```
 src/
-  App.tsx          app shell: screen switching + shared state
-  data.ts          static demo data (accounts, transactions, menus)
-  components/      sidebar, menus, modals, charts, primitives
+  App.tsx          app shell: screen switching + live Plaid data
+  api.ts           authenticated client for the Alder API
+  plaidMapping.ts  maps Plaid accounts/transactions to the design's shapes
+  data.ts          shared types + category colors and menu definitions
+  components/      sidebar, menus, modals, empty states, primitives
   screens/         Dashboard, Accounts, AccountDetail, Transactions, Settings
   index.css        design tokens + component styles
 ```

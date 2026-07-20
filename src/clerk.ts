@@ -14,6 +14,7 @@ export interface ClerkClient {
   session: { getToken: () => Promise<string | null> } | null
   load: () => Promise<void>
   openSignIn?: (options?: Record<string, unknown>) => void
+  openUserProfile?: (options?: Record<string, unknown>) => void
   redirectToSignIn?: (options?: Record<string, unknown>) => void
   joinWaitlist: (options: { emailAddress: string }) => Promise<unknown>
   signOut: () => Promise<void>
