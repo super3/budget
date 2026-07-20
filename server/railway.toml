@@ -1,5 +1,6 @@
-# Railway service config (set the service Root Directory to `server`).
-# Same healthcheck pattern as llmjob.
+# Railway service config, used only if the service's Root Directory is
+# set to `server`. The default setup needs no Root Directory at all —
+# the repo-root railway.toml points build/start here instead.
 [deploy]
 healthcheckPath = "/health"
 healthcheckTimeout = 30

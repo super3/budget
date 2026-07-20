@@ -103,9 +103,12 @@ same setup as llmjob; also run in CI via `.github/workflows/test.yml`):
 cd server && npm test
 ```
 
-Deploys on Railway: create a service from this repo with **Root Directory
-`server`**, attach the Postgres database (`DATABASE_URL` via
-`${{Postgres.DATABASE_URL}}`), and set the variables from `.env.example`.
+Deploys on Railway with no dashboard configuration: the root
+`railway.toml` points the build (`cd server && npm ci`) and start
+(`cd server && npm start`) into `server/`, so the service can be created
+straight from the repo — no Root Directory setting needed. Attach the
+Postgres database (`DATABASE_URL` via `${{Postgres.DATABASE_URL}}`) and
+set the variables from `server/.env.example`.
 
 ## Deployment
 
